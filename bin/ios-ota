@@ -1,0 +1,69 @@
+#!/usr/bin/env node
+;optimist = require('optimist');
+nconf = require('nconf');
+common = require('../lib/common');
+ws = require('../lib/webserver');
+
+(function() {
+/**
+ * Module dependencies.
+ */
+
+var exec = require('child_process').exec
+  , pkg = require('../package.json')
+  , name = pkg.name
+  , version = pkg.version;
+
+app_info = {
+  name: name,
+  version: version
+};
+
+process.title = name;
+
+// CLI
+var argv = optimist
+  .usage("Usage: ios-ota")
+
+  // configuration
+  .alias('c', 'config')
+  .describe('c', 'Load the configuration file')
+
+  // port
+  .alias('p', 'port')
+  .describe('p', 'Run the api server on the given port')
+
+  // help
+  .alias('h', 'help')
+  .describe('h', 'Shows this message')
+
+  // append the argv from the cli
+  .argv;
+
+console.log(argv);
+process.exit(1);
+
+if (process.argv.length < 2) {
+  optimist.showHelp();
+  process.exit(1);
+}
+
+// Path
+var path = program.args.shift() || '.';
+
+// Config
+nconf.argv().env();
+
+/**
+ * Exit with the given `str`.
+ *
+ * @param {String} str
+ */
+function abort(str) {
+  console.error(str);
+  process.exit(1);
+}
+
+ws.start_server();
+
+})()

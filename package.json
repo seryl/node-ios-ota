@@ -1,0 +1,11 @@
+{
+  "name":"ios-ota",
+  "version":"0.0.1",
+  "dependencies": {
+    "optimist": "0.3.x",
+    "nconf":"0.6.x",
+    "log4js": "0.5.x",
+    "restify":"1.4.x",
+    "formidable": "1.0.x"
+  }
+}
