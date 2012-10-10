@@ -6,6 +6,7 @@ formidable = require 'formidable'
 class WebServer
   constructor: (@port=8080, @pkg_info) ->
     @logger = Logger.get()
+    @identity = Identity.get()
     @app = restify.createServer()
     @setup_routes()
     @app.listen(@port)
