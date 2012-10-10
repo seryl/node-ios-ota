@@ -18,7 +18,12 @@ class WebServer
         name: @pkg_info.name,
         version: @pkg_info.version
 
-    @app.post '/test', (req, res) ->
+    @app.get '/:user/releases', (req, res) =>
+      res.json 200,
+        name: "/:user/releases",
+        releases: []
+
+    @app.post '/:user/releases', (req, res) ->
       @logger.info req
       form = formidable.IncomingForm()
       form.parse req, (err, fields, files) ->
@@ -26,5 +31,7 @@ class WebServer
           message: "Recieved Upload",
           fields: fields,
           files: files
+
+  setup_
 
 module.exports = WebServer
