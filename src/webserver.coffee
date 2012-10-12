@@ -32,6 +32,4 @@ class WebServer
           fields: fields,
           files: files
 
-  setup_
-
 module.exports = WebServer
