@@ -1,5 +1,6 @@
 Singleton = require './singleton'
 winston = require 'winston'
+MixlibLog = require('winston-mixlib-log').MixlibLog
 
 ###*
  * Logging class that acts as a singleton.
@@ -11,17 +12,8 @@ class Logger extends Singleton
   constructor: ->
     @logger = new winston.Logger
       transports: [
-        new winston.transports.Console
-          timestamp: () ->
-            cdate = new Date
-            ("").concat("[",
-              "#{cdate.getUTCFullYear()}-",
-              "#{cdate.getUTCMonth()+1}-",
-              "#{cdate.getUTCDate()}T",
-              "#{cdate.getUTCHours()}:",
-              "#{cdate.getUTCMinutes()}:",
-              "#{cdate.getUTCSeconds()}Z",
-              "]")
+        new MixlibLog
+          timestamp: true
       ]
     @logger.log = () ->
       args = arguments
