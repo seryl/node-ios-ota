@@ -15,7 +15,22 @@ class CLI
       # configuration
       .alias('c', 'config')
       .describe('c', 'The configuration file to use')
-      .default('c', "/etc/baseapp.json")
+      .default('c', "/etc/ios-ota.json")
+
+      # repository location
+      .alias('r', 'repository')
+      .describe('r', 'The location of the iOS ota repository')
+      .default('r', "/opt/ios-ota")
+
+      # redis host
+      .alias('H', 'redis_host')
+      .describe('H', 'The redis host to connect')
+      .default('H', "127.0.0.1")
+
+      # redis port
+      .alias('P', 'redis_port')
+      .describe('P', 'The redis port to connect')
+      .default('P', "6379")
 
       # logging
       .alias('l', 'loglevel')
