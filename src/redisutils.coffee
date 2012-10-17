@@ -54,29 +54,14 @@ class RedisUtility
      * @param {Function} (fn) The callback function
     ###
     @redis.add_or_update_user = (user, fn) =>
-      make_tuple = (key, func) =>
-        err = false
-        reply = [''.concat(
-          @redis.prefix('user'), '-', user.username), key, user[key]]
-        func(err, reply)
-
-      update_user = (tuple, func) =>
-        @redis.hset tuple, (err, reply) =>
-          console.log(reply)
-          return func(err, reply)
-
-      async.map Object.keys(user), make_tuple,
-        (err, reply) =>
-          if err
-            reply = "Error mapping user-object tuple."
-            return fn(err, reply)
-
-          async.forEach reply, update_user,
-            (err, reply) =>
-              # console.log(reply)
-              # console.log("awesome error" + err)
-              # console.log("wtf omgosh results" + reply)
-              # return fn(err, reply)
+      user_prefix = ''.concat(@redis.prefix('user'), '-', user.username)
+      # hset_cmd = []
+      # hset_cmd.push(user_prefix)
+      # for key in Object.keys(user)
+      #   hset_cmd.push(key)
+      #   hset_cmd.push(user[key])
+      # console.log(hset_cmd)
+      @redis.hmset(user_prefix, user, fn)
 
 ###*
  * Redis utility wrapper that acts as a singleton.
