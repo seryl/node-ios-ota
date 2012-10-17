@@ -66,9 +66,18 @@ class RedisUtility
     ###
     @redis.add_or_update_user = (user, fn) =>
       user_prefix = ''.concat(@redis.prefix('user'), '-', user.username)
-      success = @redis.hmset(user_prefix, user)
-      @redis.sadd(@redis.prefix('users'), user.username)
+      hm_success = @redis.hmset(user_prefix, user)
+      sadd_success = @redis.sadd(@redis.prefix('users'), user.username)
+      success = hm_success and sadd_success
       fn(!success, user)
+
+    ###*
+     * Returns the list of applications for a specified user.
+     * @param {String} (username) The username to retrieve applications for
+     * @param {Function} (fn) The callback function
+    ###
+    @redis.get_applications = (username, fn) =>
+      app_prefix = ''.concat(@redis.prefix('repos'), '-', username)
 
     ###*
      * Removes the given user object.

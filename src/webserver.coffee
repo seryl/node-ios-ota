@@ -33,6 +33,12 @@ class WebServer
         name: exports.name,
         version: exports.version
 
+    # Silence favicon requests.
+    @app.get '/favicon.ico', (req, res, next) =>
+      res.json 404,
+        code: 404,
+        message: "No favicon exists."
+
     # Returns the current list of users.
     @app.get '/users', (req, res, next) =>
       @redis.get_users (err, reply) ->
@@ -91,14 +97,27 @@ class WebServer
 
     # Returns the user-specific info.
     @app.get '/:user', (req, res, next) =>
-      return res.json 200,
-        message: "ok"
+      location = [req.params.user]
+      name = location.join('/')
+      location.unshift(@config.get('repository'))
+      fs.readdir location.join('/'),
+        (err, reply) =>
+          if err
+            return res.json 404,
+              code: 404,
+              user: req.params.user,
+              message: ''.concat(
+                "The user ", req.params.user, " does not exist.")
+          return res.json 200,
+            user: req.params.user
+            apps: if reply then reply else []
 
     # Lists all of the branches for a specified user/application.
     @app.get '/:user/:app/branches', (req, res, next) =>
-      name = [req.params.user, req.params.app, 'branches'].join('/')
-      fs.readdir [
-        @config.get('repository'), req.params.app, 'branches'].join('/'),
+      location = [req.params.user, req.params.app, 'branches']
+      name = location.join('/')
+      location.unshift(@config.get('repository'))
+      fs.readdir location.join('/'),
         (err, reply) =>
           console.log(err)
           console.log(reply)
@@ -107,12 +126,14 @@ class WebServer
 
     # Lists all of the tags for a specified user/application.
     @app.get '/:user/:app/tags', (req, res) =>
+      location = [req.params.user, req.params.app, 'tags']
       res.json 200,
         name: [req.params.user, req.params.app, 'tags'].join('/'),
         tags: fs.readdirSync
 
     # Posts new files to a specified user/application.
     @app.post '/:user/:app/branches', (req, res) ->
+      location = [req.params.user, req.params.app, 'branches']
       @logger.info req
       form = formidable.IncomingForm()
       form.parse req, (err, fields, files) ->
@@ -123,6 +144,7 @@ class WebServer
 
     # Posts new tags to a specified user/application.
     @app.post '/:user/:app/tags', (req, res) ->
+      location = [req.params.user, req.params.app, 'tags']
       @logger.info req
       form = formidable.IncomingForm()
       form.parse req, (err, fields, files) ->
@@ -176,7 +198,7 @@ class WebServer
           err = true
           reply =
             code: 401,
-            message: "Unauthorized: User authentication failed."
+            message: "Unauthorized: Invalid authentication secret."
         return fn(err, reply)
 
 module.exports = WebServer
