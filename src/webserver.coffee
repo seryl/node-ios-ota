@@ -3,6 +3,8 @@ Config = require './config'
 restify = require 'restify'
 {Identity, generate_identity} = require './identity'
 RedisUtils = require './redisutils'
+bcrypt = require 'bcrypt'
+require('pkginfo')(module, 'name', 'version')
 
 fs = require 'fs'
 formidable = require 'formidable'
@@ -11,42 +13,59 @@ formidable = require 'formidable'
  * The iOS-ota webserver command line interface class.
 ###
 class WebServer
-  constructor: (@port=8080, @pkg_info) ->
+  constructor: (@port=8080) ->
     @config = Config.get()
     @logger = Logger.get()
     @identity = Identity.get()
     @redis = RedisUtils.get()
     @app = restify.createServer()
+    @app.use(restify.bodyParser({ mapParams: true }))
     @setup_routing()
     @app.listen(@port)
     @logger.info "Webserver is up at: http://0.0.0.0:#{@port}"
 
+  # Sets up the webserver routing.
   setup_routing: () =>
-    @app.get '/', (req, res) =>
-      res.json 200, 
-        name: @pkg_info.name,
-        version: @pkg_info.version
 
-    @app.get '/users', (req, res) =>
+    # Returns the base name and version of the app.
+    @app.get '/', (req, res, next) =>
+      res.json 200, 
+        name: exports.name,
+        version: exports.version
+
+    # Returns the current list of users.
+    @app.get '/users', (req, res, next) =>
       @redis.get_users (err, reply) ->
         if err
           return res.json 500,
             message: reply
-
         return res.json 200,
           users: if reply then reply else []
 
-    @app.post '/users', (req, res) =>
-      @logger.info req.params.user
-      res.json 200,
-        name: "ok"
-      # @redis.authenticate()
-      # @redis.add_or_update_user(req.params.user)
-      # console.log(req)
-      # res.json 200,
-      #   name: "OK"
-      # @logger.
-      # @redis.add_user()
+    # Creates or updates a user. (Requires Auth)
+    @app.post '/users', (req, res, next) =>
+      @authenticate req, (err, reply) =>
+        if err
+          return res.json reply.code,
+            code: reply.code
+            message: reply.message
+
+        user = reply.user
+        fs.mkdir [@config.get('repository'), user.username].join('/'),
+          () =>
+            bcrypt.genSalt 10, (err, salt) =>
+              if err
+                return res.json 500,
+                  message: "Error creating bcrypt salt."
+
+              bcrypt.hash user.secret, salt, (error, hash) =>
+                if error
+                  return res.json 500,
+                    message: "Error creating bcrypt hash."
+                user.secret = hash
+                @redis.add_or_update_user(user)
+            return res.json 200,
+              name: "ok"
 
     # @app.get '/:user/:app/branches', (req, res) =>
     #   res.json 200,
@@ -63,5 +82,43 @@ class WebServer
     #       message: "Recieved Upload",
     #       fields: fields,
     #       files: files
+
+  # Authenticate the user.
+  authenticate: (req, fn) =>
+    err = false
+    username = req.params.username
+    secret = req.params.secret
+    user = req.params.user
+
+    if !username
+      err = true
+      reply =
+        code: 401,
+        message: "Unauthorized: No username parameter was provided."
+
+    if !secret
+      err = true
+      reply =
+        code: 401,
+        message: "Unauthorized: No secret parameter was provided."
+
+    if username == "admin"
+      if secret != @config.get('admin_secret')
+        err = true
+        reply =
+          code: 401,
+          message: "Unauthorized: Invalid authentication secret."
+      else
+        reply =
+          user: user
+    else
+      err = true
+      reply =
+        code: 401,
+        message: "Users are not implemented yet."
+      # @redis.get_user(user, (err, reply) ->
+      #   )
+
+    fn(err, reply)
 
 module.exports = WebServer

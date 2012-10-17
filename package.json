@@ -14,7 +14,9 @@
     "nconf": "0.6.x",
     "restify":"1.4.x",
     "redis": "0.8.x",
-    "formidable": "1.0.x"
+    "formidable": "1.0.x",
+    "bcrypt": "0.7.x",
+    "pkginfo": "0.2.x"
   },
   "devDependencies": {
     "vows": "0.6.x",

@@ -1,21 +1,27 @@
 optimist = require 'optimist'
 Logger = require './logger'
 Config = require './config'
+require('pkginfo')(module, 'name')
 
 ###*
  * The command line interface class.
 ###
 class CLI
-  constructor: (@pkg_info) ->
+  constructor: () ->
     @config = Config.get()
     @logger = Logger.get()
     @argv = optimist
-      .usage("Usage: " + @pkg_info.name)
+      .usage("Usage: " + exports.name)
 
       # configuration
       .alias('c', 'config')
       .describe('c', 'The configuration file to use')
       .default('c', "/etc/ios-ota.json")
+
+      # admin secret
+      .alias('a', 'admin_secret')
+      .describe('a', 'The secret for the admin user')
+      .default('a', "admin")
 
       # repository location
       .alias('r', 'repository')

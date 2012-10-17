@@ -8,12 +8,12 @@ WebServer = require './webserver'
  * The base application class.
 ###
 class Application
-  constructor: (@pkg_info) ->
+  constructor: () ->
     @config = Config.get()
     @logger = Logger.get()
-    @cli = new CLI(@pkg_info, @logger)
+    @cli = new CLI()
     @identity = Identity.get()
-    @ws = new WebServer(@config.get('port'), @pkg_info)
+    @ws = new WebServer(@config.get('port'))
 
   abort: (str) =>
     @logger.info('aborting...')
