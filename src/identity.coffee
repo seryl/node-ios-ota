@@ -1,7 +1,11 @@
 Singleton = require './singleton'
 crypto = require 'crypto'
 
-# Generates a new identity
+###*
+ * Generates a new identity.
+ * @param {Integer} (length) The length of the identity bytestring
+ * @return {String} The randombyte hex string
+###
 generate_identity = (length=8) ->
   crypto.randomBytes(length).toString('hex')
 

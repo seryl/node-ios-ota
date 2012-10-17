@@ -83,7 +83,11 @@ class WebServer
     #       fields: fields,
     #       files: files
 
-  # Authenticate the user.
+  ###*
+   * Authenticates the user.
+   * @param {Object} (req) The restify request object
+   * @param {Function} (fn) The callback function
+  ###
   authenticate: (req, fn) =>
     err = false
     username = req.params.username
