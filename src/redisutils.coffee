@@ -3,6 +3,7 @@ Config = require './config'
 Logger = require './logger'
 redis = require 'redis'
 async = require 'async'
+bcrypt = require 'bcrypt'
 
 ###*
  * Redis utility wrapper for the iOS-ota service.
@@ -29,7 +30,7 @@ class RedisUtility
      * @param {Function} (fn) The callback function
     ###
     @redis.get_users = (fn) =>
-      @redis.get(@redis.prefix('users'), fn)
+      @redis.smembers(@redis.prefix('users'), fn)
 
     ###*
      * Returns the full user hash.
@@ -49,6 +50,16 @@ class RedisUtility
         @redis.prefix('user'), '-', username), 'secret', fn)
 
     ###*
+     * Attempts to validate the login.
+     * @param {Object} (user) The user login object user/secret tuple
+     * @param {Function} (fn) The callback function
+    ###
+    @redis.check_login = (user, fn) =>
+      @redis.get_user user.username, (err, reply) =>
+        bcrypt.compare user.secret, reply.secret, (err, res) =>
+          return fn(err, res)
+
+    ###*
      * Adds or updates a user with the given user object.
      * @param {Object} (user) The user object hash to create or update
      * @param {Function} (fn) The callback function
@@ -56,6 +67,7 @@ class RedisUtility
     @redis.add_or_update_user = (user, fn) =>
       user_prefix = ''.concat(@redis.prefix('user'), '-', user.username)
       success = @redis.hmset(user_prefix, user)
+      @redis.sadd(@redis.prefix('users'), user.username)
       fn(!success, user)
 
 ###*

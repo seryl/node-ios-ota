@@ -90,7 +90,7 @@ class WebServer
     #       @config.get('repository'), req.params.user, req.params.app
     #     ].join('/'))
 
-    # @app.post '/releases', (req, res) ->
+    # @app.post '/:user/:app/releases', (req, res) ->
     #   @logger.info req
     #   form = formidable.IncomingForm()
     #   form.parse req, (err, fields, files) ->
@@ -106,24 +106,25 @@ class WebServer
   ###
   authenticate: (req, fn) =>
     err = false
-    username = req.params.username
-    secret = req.params.secret
+    credentials =
+      username: req.params.username
+      secret: req.params.secret
     user = req.params.user
 
-    if !username
+    if !credentials.username
       err = true
       reply =
         code: 401,
         message: "Unauthorized: No username parameter was provided."
 
-    if !secret
+    if !credentials.secret
       err = true
       reply =
         code: 401,
         message: "Unauthorized: No secret parameter was provided."
 
-    if username == "admin"
-      if secret != @config.get('admin_secret')
+    if credentials.username == "admin"
+      if credentials.secret != @config.get('admin_secret')
         err = true
         reply =
           code: 401,
@@ -134,15 +135,16 @@ class WebServer
           user: user
       return fn(err, reply)
     else
-      @redis.get_user user.username, (err, reply) =>
-        if err
-          reply =
-            code: 401,
-            message: "Unauthorized: User not found."
-        else
+      @redis.check_login credentials, (err, authenticated) =>
+        if authenticated
           reply =
             admin: false
-            user: reply
+            user: authenticated
+        else
+          err = true
+          reply =
+            code: 401,
+            message: "Unauthorized: User authentication failed."
         return fn(err, reply)
 
 module.exports = WebServer
