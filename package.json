@@ -16,6 +16,7 @@
     "redis": "0.8.x",
     "formidable": "1.0.x",
     "bcrypt": "0.7.x",
+    "async": "0.1.x",
     "pkginfo": "0.2.x"
   },
   "devDependencies": {

@@ -2,6 +2,7 @@ Singleton = require './singleton'
 Config = require './config'
 Logger = require './logger'
 redis = require 'redis'
+async = require 'async'
 
 ###*
  * Redis utility wrapper for the iOS-ota service.
@@ -23,12 +24,25 @@ class RedisUtility
       @redis.hgetall(''.concat(@redis.prefix('user'), '-', username), fn)
 
     @redis.get_user_secret = (username, fn) =>
-      @redis.hget(''.concat(@redis.prefix('user'), '-', username), 'secret', fn)
+      @redis.hget(''.concat(
+        @redis.prefix('user'), '-', username), 'secret', fn)
 
     @redis.add_or_update_user = (user, fn) =>
-      console.log(user)
-      # @redis.hset(
-      #   ''.concat(@redis.prefix('user'), '-', user.username), 'secret', fn)
+      async.map Object.keys(user),
+        (key, func1) =>
+          err = false
+          reply = [''.concat(
+            @redis.prefix('user'), '-', user.username), key, user[key]]
+          func1(err, reply)
+        (err, results) =>
+          console.log(err)
+          # if err == false
+          #   async.forEach results,
+          #     (tuple, func2) =>
+          #       err = false
+          #       reply = @redis.hset(tuple, fn)
+          # else
+          #   fn(err, results)
 
 ###*
  * Redis utility wrapper that acts as a singleton.
