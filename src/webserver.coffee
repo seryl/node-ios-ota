@@ -132,14 +132,17 @@ class WebServer
         reply =
           admin: true
           user: user
+      return fn(err, reply)
     else
-      err = true
-      reply =
-        code: 401,
-        message: "Users are not implemented yet."
-      # @redis.get_user(user, (err, reply) ->
-      #   )
-
-    fn(err, reply)
+      @redis.get_user user.username, (err, reply) =>
+        if err
+          reply =
+            code: 401,
+            message: "Unauthorized: User not found."
+        else
+          reply =
+            admin: false
+            user: reply
+        return fn(err, reply)
 
 module.exports = WebServer
