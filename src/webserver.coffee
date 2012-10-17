@@ -51,21 +51,37 @@ class WebServer
             message: reply.message
 
         user = reply.user
+        if user.username == "admin"
+          return res.json 403,
+            code: 403,
+            message: "Unable to modify administrative user."
+
+        if !reply.admin
+          return res.json 401,
+            code: 401,
+            message: "Only administrators are allowed to modify accounts."
+
         fs.mkdir [@config.get('repository'), user.username].join('/'),
           () =>
             bcrypt.genSalt 10, (err, salt) =>
               if err
                 return res.json 500,
+                  code: 500,
                   message: "Error creating bcrypt salt."
 
               bcrypt.hash user.secret, salt, (error, hash) =>
                 if error
                   return res.json 500,
+                    code: 500,
                     message: "Error creating bcrypt hash."
                 user.secret = hash
-                @redis.add_or_update_user(user)
-            return res.json 200,
-              name: "ok"
+                @redis.add_or_update_user user, (err, reply) =>
+                  if err
+                    return res.json 500,
+                      code: 500,
+                      message: "Error updating user: " + user.username
+                  return res.json 200
+                    message: "Successfully updated: " + user.username
 
     # @app.get '/:user/:app/branches', (req, res) =>
     #   res.json 200,
@@ -114,6 +130,7 @@ class WebServer
           message: "Unauthorized: Invalid authentication secret."
       else
         reply =
+          admin: true
           user: user
     else
       err = true

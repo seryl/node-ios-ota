@@ -55,13 +55,8 @@ class RedisUtility
     ###
     @redis.add_or_update_user = (user, fn) =>
       user_prefix = ''.concat(@redis.prefix('user'), '-', user.username)
-      # hset_cmd = []
-      # hset_cmd.push(user_prefix)
-      # for key in Object.keys(user)
-      #   hset_cmd.push(key)
-      #   hset_cmd.push(user[key])
-      # console.log(hset_cmd)
-      @redis.hmset(user_prefix, user, fn)
+      success = @redis.hmset(user_prefix, user)
+      fn(!success, user)
 
 ###*
  * Redis utility wrapper that acts as a singleton.
