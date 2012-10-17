@@ -83,21 +83,53 @@ class WebServer
                   return res.json 200
                     message: "Successfully updated: " + user.username
 
-    # @app.get '/:user/:app/branches', (req, res) =>
-    #   res.json 200,
-    #     name: [req.params.user, req.params.app, 'branches'].join('/'),
-    #     branches: fs.readdirSync([
-    #       @config.get('repository'), req.params.user, req.params.app
-    #     ].join('/'))
+    # Deletes a user. (Requires Auth)
+    @app.del '/users', (req, res, next) =>
+      res.json 501,
+        code: 501,
+        message: "Restify current doesn't support parsing body params."
 
-    # @app.post '/:user/:app/releases', (req, res) ->
-    #   @logger.info req
-    #   form = formidable.IncomingForm()
-    #   form.parse req, (err, fields, files) ->
-    #     res.json 200,
-    #       message: "Recieved Upload",
-    #       fields: fields,
-    #       files: files
+    # Returns the user-specific info.
+    @app.get '/:user', (req, res, next) =>
+      return res.json 200,
+        message: "ok"
+
+    # Lists all of the branches for a specified user/application.
+    @app.get '/:user/:app/branches', (req, res, next) =>
+      name = [req.params.user, req.params.app, 'branches'].join('/')
+      fs.readdir [
+        @config.get('repository'), req.params.app, 'branches'].join('/'),
+        (err, reply) =>
+          console.log(err)
+          console.log(reply)
+          return res.json 200,
+            mesasge: "BRANCHES BIATCH"
+
+    # Lists all of the tags for a specified user/application.
+    @app.get '/:user/:app/tags', (req, res) =>
+      res.json 200,
+        name: [req.params.user, req.params.app, 'tags'].join('/'),
+        tags: fs.readdirSync
+
+    # Posts new files to a specified user/application.
+    @app.post '/:user/:app/branches', (req, res) ->
+      @logger.info req
+      form = formidable.IncomingForm()
+      form.parse req, (err, fields, files) ->
+        res.json 200,
+          message: "Recieved Upload",
+          fields: fields,
+          files: files
+
+    # Posts new tags to a specified user/application.
+    @app.post '/:user/:app/tags', (req, res) ->
+      @logger.info req
+      form = formidable.IncomingForm()
+      form.parse req, (err, fields, files) ->
+        res.json 200,
+          message: "Recieved Upload",
+          fields: fields,
+          files: files
 
   ###*
    * Authenticates the user.

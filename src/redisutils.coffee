@@ -70,6 +70,17 @@ class RedisUtility
       @redis.sadd(@redis.prefix('users'), user.username)
       fn(!success, user)
 
+    ###*
+     * Removes the given user object.
+     * @param {String} (username) The username to remove
+     * @param {Function} (fn) The callback function
+    ###
+    @redis.remove_user = (username, fn) =>
+      user_prefix = ''.concat(@redis.prefix('user'), '-', username)
+      @redis.hdel(user_prefix, (err, res) =>
+        console.log(err, res))
+        # @redis.srem(@redis.prefix('users'), )
+
 ###*
  * Redis utility wrapper that acts as a singleton.
 ###
