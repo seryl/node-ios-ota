@@ -2,14 +2,15 @@ Singleton = require './singleton'
 Config = require './config'
 Logger = require './logger'
 redis = require 'redis'
-async = require 'async'
+merge = require 'merge-recursive'
 bcrypt = require 'bcrypt'
 
 ###*
  * Redis utility wrapper for the iOS-ota service.
 ###
 class RedisUtility
-  constructor: (port, host, options, @prefix="ios-ota-") ->
+  constructor: (port, host, options) ->
+    @prefix="ios-ota-"
     @redis = redis.createClient(port, host, options)
     @modify_redis()
     return @redis
@@ -66,10 +67,18 @@ class RedisUtility
     ###
     @redis.add_or_update_user = (user, fn) =>
       user_prefix = ''.concat(@redis.prefix('user'), '-', user.username)
-      hm_success = @redis.hmset(user_prefix, user)
-      sadd_success = @redis.sadd(@redis.prefix('users'), user.username)
-      success = hm_success and sadd_success
-      fn(!success, user)
+      @redis.get_user user.username, (err, current_user) =>
+        if err
+          reply = "Error retrieving user from db."
+          return fn(err, reply)
+
+        if !current_user == null
+          user = merge.recursive(current_user, user)
+
+        hm_success = @redis.hmset(user_prefix, user)
+        sadd_success = @redis.sadd(@redis.prefix('users'), user.username)
+        success = hm_success and sadd_success
+        return fn(!success, user)
 
     ###*
      * Returns the list of applications for a specified user.
@@ -77,7 +86,9 @@ class RedisUtility
      * @param {Function} (fn) The callback function
     ###
     @redis.get_applications = (username, fn) =>
-      app_prefix = ''.concat(@redis.prefix('repos'), '-', username)
+      app_prefix = ''.concat(@redis.prefix('applications'), '-', username)
+      @redis.smembers(app_prefix, (err, apps) =>
+        )
 
     ###*
      * Removes the given user object.
