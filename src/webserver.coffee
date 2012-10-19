@@ -1,13 +1,12 @@
-Logger = require './logger'
-Config = require './config'
 restify = require 'restify'
-{Identity, generate_identity} = require './identity'
-RedisUtils = require './redisutils'
-bcrypt = require 'bcrypt'
-require('pkginfo')(module, 'name', 'version')
-
 fs = require 'fs'
 formidable = require 'formidable'
+require('pkginfo')(module, 'name', 'version')
+
+Config = require './config'
+Logger = require './logger'
+{Identity, generate_identity} = require './identity'
+User = require './models/user'
 
 ###*
  * The iOS-ota webserver command line interface class.
@@ -17,7 +16,6 @@ class WebServer
     @config = Config.get()
     @logger = Logger.get()
     @identity = Identity.get()
-    @redis = RedisUtils.get()
     @app = restify.createServer( name: exports.name )
     @app.use(restify.authorizationParser());
     @app.use(restify.bodyParser({ mapParams: true }))
@@ -66,17 +64,22 @@ class WebServer
 
     # Returns the current list of users.
     @app.get '/users', (req, res, next) =>
-      @redis.get_users (err, reply) ->
-        if err
-          return res.json 500,
-            code: 500
-            message: reply
-        return res.json 200,
-          users: if reply then reply else []
+      new User({ name: "bobby" }).save (err, user) =>
+        res.json 200,
+          user: user
+      # new User().all { name: true }, (err, users) =>
+      #   res.json 200,
+      #     users: users
+      # @redis.get_users (err, reply) ->
+      #   if err
+      #     return res.json 500,
+      #       code: 500
+      #       message: reply
+      #   return res.json 200,
+      #     users: if reply then reply else []
 
     # Creates or updates a user. (Requires Auth)
     @app.post '/users', (req, res, next) =>
-      return next(new restify.NotAuthorizedError("awesome"))
       @authenticate req, (err, reply) =>
         if err
           return res.json reply.code,

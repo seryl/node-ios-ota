@@ -1,7 +1,8 @@
+redis = require 'redis'
+
 Singleton = require '../singleton'
 Config = require '../config'
 Logger = require '../logger'
-redis = require 'redis'
 
 ###*
  * Redis utility wrapper that acts as a singleton.

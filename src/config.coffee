@@ -1,5 +1,6 @@
-Singleton = require './singleton'
 nconf = require 'nconf'
+
+Singleton = require './singleton'
 
 ###*
  * Config class that acts as a singleton.

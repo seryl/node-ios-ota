@@ -1,5 +1,6 @@
-Singleton = require './singleton'
 crypto = require 'crypto'
+
+Singleton = require './singleton'
 
 ###*
  * Generates a new identity.

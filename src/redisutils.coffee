@@ -72,7 +72,7 @@ class RedisUtility
           reply = "Error retrieving user from db."
           return fn(err, reply)
 
-        if !current_user == null
+        if not current_user is null
           user = merge.recursive(current_user, user)
 
         hm_success = @redis.hmset(user_prefix, user)
@@ -106,11 +106,11 @@ class RedisUtility
 ###*
  * Redis utility wrapper that acts as a singleton.
 ###
-class RedisUtils extends Singleton
+class RedisSingleton extends Singleton
   constructor: ->
     @config = Config.get()
     @logger = Logger.get()
-    @redis = new RedisUtility(
+    @redis = new redis.createClient(
       @config.get("redis_port"),@config.get("redis_host") )
 
     @redis.on "error", (err) =>
@@ -120,4 +120,4 @@ class RedisUtils extends Singleton
 
     return @redis
 
-module.exports = RedisUtils
+module.exports = RedisSingleton

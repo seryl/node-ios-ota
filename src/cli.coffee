@@ -1,7 +1,8 @@
 optimist = require 'optimist'
-Logger = require './logger'
-Config = require './config'
 require('pkginfo')(module, 'name')
+
+Config = require './config'
+Logger = require './logger'
 
 ###*
  * The command line interface class.

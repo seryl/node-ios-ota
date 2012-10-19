@@ -1,6 +1,7 @@
-Singleton = require './singleton'
 winston = require 'winston'
 MixlibLog = require('winston-mixlib-log').MixlibLog
+
+Singleton = require './singleton'
 
 ###*
  * Logging class that acts as a singleton.
