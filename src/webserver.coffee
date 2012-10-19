@@ -35,27 +35,27 @@ class WebServer
     # List help.
     @app.get '/help', (req, res, next) =>
       res.json 200, services: [
-        {url: '/', method: 'GET', description: 'version info'},
-        {url: '/help', method: 'GET', description: 'help information'},
-        {url: '/users', method: 'GET', description: 'returns the list of users'},
+        # {url: '/', method: 'GET', description: 'version info'},
+        # {url: '/help', method: 'GET', description: 'help information'},
+        # {url: '/users', method: 'GET', description: 'returns the list of users'},
 
-        {url: '/:user', method: 'GET', description: 'returns the user info'},
-        {url: '/:user', method: 'POST', description: 'adds or updates a user'},
-        {url: '/:user', method: 'DELETE', description: 'deletes a user'},
+        # {url: '/:user', method: 'GET', description: 'returns the user info'},
+        # {url: '/:user', method: 'POST', description: 'adds or updates a user'},
+        # {url: '/:user', method: 'DELETE', description: 'deletes a user'},
 
-        {url: '/:user/:app', method: 'GET', description: 'returns the app info'},
-        {url: '/:user/:app', method: 'POST', description: 'adds or creates an app'},
-        {url: '/:user/:app', method: 'DELETE', description: 'deletes an app'},
+        # {url: '/:user/:app', method: 'GET', description: 'returns the app info'},
+        # {url: '/:user/:app', method: 'POST', description: 'adds or creates an app'},
+        # {url: '/:user/:app', method: 'DELETE', description: 'deletes an app'},
 
-        {url: '/:/user/:app/branches', method: 'GET', description: 'returns the list of branches for a given app'},
-        {url: '/:/user/:app/branches/:branch', method: 'GET', description: 'returns the branch info for the app'},
-        {url: '/:/user/:app/branches/:branch', method: 'POST', description: 'add or updates the branch info for the app'},
-        {url: '/:/user/:app/branches/:branch', method: 'DELETE', description: 'deletes a branch for the app'},
+        # {url: '/:/user/:app/branches', method: 'GET', description: 'returns the list of branches for a given app'},
+        # {url: '/:/user/:app/branches/:branch', method: 'GET', description: 'returns the branch info for the app'},
+        # {url: '/:/user/:app/branches/:branch', method: 'POST', description: 'add or updates the branch info for the app'},
+        # {url: '/:/user/:app/branches/:branch', method: 'DELETE', description: 'deletes a branch for the app'},
 
-        {url: '/:/user/:app/tags', method: 'GET', description: 'returns the list of branches for a given app'},
-        {url: '/:/user/:app/branches/:branch', method: 'GET', description: 'returns the branch info for the app'},
-        {url: '/:/user/:app/branches/:branch', method: 'POST', description: 'add or updates the branch info for the app'},
-        {url: '/:/user/:app/branches/:branch', method: 'DELETE', description: 'deletes a branch for the app'},
+        # {url: '/:/user/:app/tags', method: 'GET', description: 'returns the list of branches for a given app'},
+        # {url: '/:/user/:app/branches/:branch', method: 'GET', description: 'returns the branch info for the app'},
+        # {url: '/:/user/:app/branches/:branch', method: 'POST', description: 'add or updates the branch info for the app'},
+        # {url: '/:/user/:app/branches/:branch', method: 'DELETE', description: 'deletes a branch for the app'},
       ]
 
     # Silence favicon requests.
@@ -64,12 +64,28 @@ class WebServer
 
     # Returns the current list of users.
     @app.get '/users', (req, res, next) =>
-      new User({ name: "bobby" }).save (err, user) =>
-        res.json 200,
-          user: user
-      # new User().all { name: true }, (err, users) =>
+      console.log new User('jim').applications.list (err, reply) =>
+        console.log(err)
+        console.log(reply)
+    #   user = new User()
+    #   user2 = user.build({name: "ted"}).save (err, usr) =>
+    #     console.log(err)
+        # console.log(usr)
+
+      # console.log(user)
+      # new User({ name: "bobby" }).save (err, user) =>
       #   res.json 200,
-      #     users: users
+      #     user: user
+      # new User().all { name: true }, (err, users) =>
+        # res.json 200,
+        #   users: users
+
+      # new User().find
+      #   name: "bobby"
+      #   (err, reply) =>
+      #     res.json 200,
+      #       err: err,
+      #       reply: reply
       # @redis.get_users (err, reply) ->
       #   if err
       #     return res.json 500,

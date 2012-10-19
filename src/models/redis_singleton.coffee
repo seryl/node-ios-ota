@@ -17,7 +17,7 @@ class RedisSingleton extends Singleton
     @redis.on "error", (err) =>
       @logger.error ''.concat("Error connecting to redis://"
         @config.get('redis_host'), ':', @config.get('redis_port'))
-      process.exit(1)
+      @logger.error "Retrying connection..."
 
     return @redis
 

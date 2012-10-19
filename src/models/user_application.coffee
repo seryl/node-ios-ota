@@ -1,22 +1,33 @@
 RedisObject = require './redis_object'
 {generate_identity} = require '../identity'
-UserApp = require './user_application'
 
 ###*
  * Acts as a base class for all Redis-based objects.
 ###
-class User extends RedisObject
-  constructor: ->
-    super
-    @object_name = 'user'
-    @applications = new UserApp(@current)
+class UserApp extends RedisObject
+  constructor: (@user, obj=null) ->
+    super obj
+    @object_name = 'application'
 
   ###*
-   * Returns the list of user names.
+   * The applications prefix for the specified user.
+  ###
+  user_prefix: () =>
+    ''.concat(@prefix(), 's', '::', @user)
+
+  ###*
+   * The user-specific application prefix for a given application.
+   * @param {String} (application) The name of the application
+  ###
+  application_prefix: (application) =>
+    [''.concat(@user_prefix(), application)].join('::')
+
+  ###*
+   * Returns the list of application names for a given user.
    * @param {Function} (fn) The callback function
   ###
   list: (fn) =>
-    return @redis.smembers(''.concat(@prefix(), 's'), fn)
+    return @redis.smembers(@user_prefix), fn)
 
   ###*
    * Returns all of the user objects with the given filter.
@@ -25,10 +36,10 @@ class User extends RedisObject
   ###
   all: (filter=null, fn) =>
     @current = null
-    filter = {} unless filter
-    @list (err, usernames) =>
+    filter or= {}
+    @list (err, applications) =>
       if (filter.name and Object.keys(filter).length is 1) or err
-        return fn(err, usernames)
+        return fn(err, applications)
 
   ###*
    * Searches for the redis objects that match the query.
@@ -37,10 +48,11 @@ class User extends RedisObject
   ###
   find: (query, fn) =>
     @current = null
-    @list (err, usernames) =>
+    query or= {}
+    @list (err, applications) =>
       if err
-        return fn(err, usernames)
-      if query.name in usernames
+        return fn(err, applications)
+      if query.name in applications
         console.log("GOT IT")
         # Get the user and application hash lookup
     fn(null, [])
@@ -64,15 +76,14 @@ class User extends RedisObject
     return fn(null, false) unless @current
     target = @current
 
-    user_prefix = [@prefix(), target.name].join('::')
     @all { name: true }, (err, usernames) =>
       if target.name in usernames
         @current = target
         return fn(null, false)
 
       target.secret = generate_identity()
-      stat_add = @redis.sadd(''.concat(@prefix(), 's'), target.name)
-      stat_hm = @redis.hmset(user_prefix, target)
+      stat_add = @redis.sadd(@application_prefix())
+      stat_hm = @redis.hmset(@user_prefix(), target)
       @current = target
 
       status = if (stat_add and stat_hm) then null else
@@ -87,4 +98,4 @@ class User extends RedisObject
   # delete: (fn) =>
   #   fn(null, true)
 
-module.exports = User
+module.exports = UserApp

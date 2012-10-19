@@ -18,6 +18,14 @@ class RedisObject
   prefix: => [@base_prefix, @object_name].join('-')
 
   ###*
+   * Creates a new redis object.
+   * @param {Function} (fn) The callback function
+  ###
+  build: (obj) =>
+    @current = obj
+    return @
+
+  ###*
    * Returns all of the redis objects of the current object type.
    * @param {Object} (filter) The object keys you wish to return (null is all)
    * @param {Function} (fn) The callback function
@@ -51,15 +59,6 @@ class RedisObject
    * @param {Function} (fn) The callback function
   ###
   save: (fn) =>
-    return fn(null, false) unless @current
-    fn(null, true)
-
-  ###*
-   * Updates a redis object with the given parameters.
-   * @param {Object} (obj) The object to merge with updates
-   * @param {Function} (fn) The callback function
-  ###
-  update: (obj, fn) =>
     return fn(null, false) unless @current
     fn(null, true)
 
