@@ -1,6 +1,6 @@
-Singleton = require './singleton'
-Config = require './config'
-Logger = require './logger'
+Singleton = require '../singleton'
+Config = require '../config'
+Logger = require '../logger'
 redis = require 'redis'
 
 ###*
