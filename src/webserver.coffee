@@ -18,7 +18,8 @@ class WebServer
     @logger = Logger.get()
     @identity = Identity.get()
     @redis = RedisUtils.get()
-    @app = restify.createServer()
+    @app = restify.createServer( name: exports.name )
+    @app.use(restify.authorizationParser());
     @app.use(restify.bodyParser({ mapParams: true }))
     @setup_routing()
     @app.listen(@port)
@@ -61,9 +62,7 @@ class WebServer
 
     # Silence favicon requests.
     @app.get '/favicon.ico', (req, res, next) =>
-      res.json 404,
-        code: 404,
-        message: "No favicon exists."
+      return next(new restify.codeToHttpError(404, "No favicon exists."))
 
     # Returns the current list of users.
     @app.get '/users', (req, res, next) =>
@@ -76,7 +75,8 @@ class WebServer
           users: if reply then reply else []
 
     # Creates or updates a user. (Requires Auth)
-    @app.post '/:user', (req, res, next) =>
+    @app.post '/users', (req, res, next) =>
+      return next(new restify.NotAuthorizedError("awesome"))
       @authenticate req, (err, reply) =>
         if err
           return res.json reply.code,
@@ -152,10 +152,25 @@ class WebServer
             apps: if apps then apps else []
 
     # Deletes a user. (Requires Auth)
+    # 
+    # NOTE: Currently this does not use authentication at all.
+    #       Restify doesn't parse body parameters with delete requests yet.
+    #
+    #       https://github.com/mcavage/node-restify/issues/180
     @app.del '/:user', (req, res, next) =>
-      res.json 501,
-        code: 501,
-        message: "Restify current doesn't support parsing body params."
+      if req.params.user in ["help", "users"]
+        return res.json 403,
+          code: 403
+          message: "Unable to modify internal services."
+
+      @redis.remove_user req.params.user, (err, reply) =>
+        if err
+          return res.json 500,
+            code: 500,
+            message: ''.concat("Error deleting user `", req.params.user, "`.")
+        res.json 200,
+          message: ''.concat(
+            "Successfully deleted the user `", req.params.user, "`.")
 
     # Returns the list of applications for a specific user.
     @app.get '/:user/:app', (req, res, next) =>
@@ -243,14 +258,12 @@ class WebServer
       else
         reply =
           admin: true
-          user: user
       return fn(err, reply)
     else
       @redis.check_login credentials, (err, authenticated) =>
         if authenticated
           reply =
             admin: false
-            user: authenticated
         else
           err = true
           reply =

@@ -87,8 +87,10 @@ class RedisUtility
     ###
     @redis.get_applications = (username, fn) =>
       app_prefix = ''.concat(@redis.prefix('applications'), '-', username)
-      @redis.smembers(app_prefix, (err, apps) =>
-        )
+      @redis.smembers app_prefix, (err, apps) =>
+        console.log(err)
+        console.log(apps)
+          # fn(err, apps)
 
     ###*
      * Removes the given user object.
@@ -97,7 +99,7 @@ class RedisUtility
     ###
     @redis.remove_user = (username, fn) =>
       user_prefix = ''.concat(@redis.prefix('user'), '-', username)
-      @redis.hdel(user_prefix, (err, res) =>
+      @redis.del(user_prefix, (err, res) =>
         console.log(err, res))
         # @redis.srem(@redis.prefix('users'), )
 
