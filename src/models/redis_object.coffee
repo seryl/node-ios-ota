@@ -1,4 +1,4 @@
-RedisSingleton = require '../redis'
+RedisSingleton = require './redis_singleton'
 
 ###*
  * Acts as a base class for all Redis-based objects.
