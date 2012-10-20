@@ -1,3 +1,5 @@
+merge = require 'merge-recursive'
+
 RedisObject = require './redis_object'
 {generate_identity} = require '../identity'
 UserApp = require './user_application'
@@ -9,14 +11,29 @@ class User extends RedisObject
   constructor: ->
     super
     @object_name = 'user'
-    @applications = new UserApp(@current)
+    # @applications = new UserApp(@current)
+
+  ###*
+   * The user list prefix.
+   * @return {String} The prefix for the list of users.
+  ###
+  userlist_prefix: =>
+    ''.concat(@prefix(), 's')
+
+  ###*
+   * The user-specific data prefix.
+   * @param {String} The name of the user you want the prefix for
+   * @return {String} The prefix for the user-specific data
+  ###
+  user_prefix: (name) =>
+    [@prefix(), name].join('::')
 
   ###*
    * Returns the list of user names.
    * @param {Function} (fn) The callback function
   ###
   list: (fn) =>
-    return @redis.smembers(''.concat(@prefix(), 's'), fn)
+    return @redis.smembers(@userlist_prefix(), fn)
 
   ###*
    * Returns all of the user objects with the given filter.
@@ -32,18 +49,22 @@ class User extends RedisObject
 
   ###*
    * Searches for the redis objects that match the query.
-   * @param {Object} (query) The query object to search
+   * @param {String} (name) The name of the user to find
    * @param {Function} (fn) The callback function
   ###
-  find: (query, fn) =>
+  find: (name, fn) =>
     @current = null
     @list (err, usernames) =>
       if err
         return fn(err, usernames)
-      if query.name in usernames
-        console.log("GOT IT")
-        # Get the user and application hash lookup
-    fn(null, [])
+      if name in usernames
+        @redis.hgetall @user_prefix(name), (err, obj) =>
+          if err
+            err =
+              message: ''.concat("Error retrieving userinfo for `", name, "`.")
+          return fn(err, obj)
+
+    fn(null, {})
 
   ###*
    * Searches for the redis object that matches the query.
@@ -62,22 +83,46 @@ class User extends RedisObject
   ###
   save: (fn) =>
     return fn(null, false) unless @current
+
+    if typeof @current.name == "string"
+      @current.name = @current.name.toLowerCase()
     target = @current
 
-    user_prefix = [@prefix(), target.name].join('::')
-    @all { name: true }, (err, usernames) =>
+    @list (err, usernames) =>
+      # Update the account
       if target.name in usernames
-        @current = target
-        return fn(null, false)
+        @find target.name, (err, userinfo) =>
+          console.log('FINDING USER: ' + target.name)
+          userinfo = if userinfo then userinfo else {}
+          console.log(userinfo)
+          target = merge.recursive(userinfo, target)
+          console.log('MERGING')
+          console.log(target)
+          return @save_user(target, fn)
 
-      target.secret = generate_identity()
-      stat_add = @redis.sadd(''.concat(@prefix(), 's'), target.name)
-      stat_hm = @redis.hmset(user_prefix, target)
-      @current = target
+      return @save_user(target, fn)
 
-      status = if (stat_add and stat_hm) then null else
-        message: "Error saving user"
-      return fn(status, @current)
+  ###*
+   * Saves the given user object.
+   * @param {Object} (obj) The user object to save
+   * @return {Object} The status of the object save
+  ###
+  save_user: (obj, fn) =>
+    obj.secret or= generate_identity()
+    stat_add = @redis.sadd(@userlist_prefix(), obj.name)
+    stat_hm = @redis.hmset(@user_prefix(obj.name), obj)
+
+    # status = if (stat_add and stat_hm) then null else
+    #     message: ''.concat("Error saving user: `", obj.name, "`.")
+    status = null
+
+    @current = obj
+
+    console.log('SAVING USER')
+    # console.log(status)
+    # console.log(obj)
+
+    fn(status, @current)
 
   ###*
    * Deletes a redis object that matches the query.

@@ -64,9 +64,23 @@ class WebServer
 
     # Returns the current list of users.
     @app.get '/users', (req, res, next) =>
-      console.log new User('jim').applications.list (err, reply) =>
+      user = new User
+      user.build({ name: "Jim" }).save (err, reply) =>
         console.log(err)
         console.log(reply)
+        # res.json 200,
+        #   err: err
+        #   reply: reply
+
+        # user.applications.build({ name: "awesome" }).save (err, reply) =>
+        #   console.log(err)
+        #   console.log(reply)
+          
+      # new User('jim').list (err, reply) =>
+      #   res.json 200,
+      #     err: err
+      #     reply: reply
+
     #   user = new User()
     #   user2 = user.build({name: "ted"}).save (err, usr) =>
     #     console.log(err)
