@@ -63,8 +63,7 @@ class User extends RedisObject
             err =
               message: ''.concat("Error retrieving userinfo for `", name, "`.")
           return fn(err, obj)
-
-    fn(null, {})
+      else return fn(null, {})
 
   ###*
    * Searches for the redis object that matches the query.
@@ -92,15 +91,10 @@ class User extends RedisObject
       # Update the account
       if target.name in usernames
         @find target.name, (err, userinfo) =>
-          console.log('FINDING USER: ' + target.name)
           userinfo = if userinfo then userinfo else {}
-          console.log(userinfo)
           target = merge.recursive(userinfo, target)
-          console.log('MERGING')
-          console.log(target)
           return @save_user(target, fn)
-
-      return @save_user(target, fn)
+      else return @save_user(target, fn)
 
   ###*
    * Saves the given user object.
@@ -112,17 +106,10 @@ class User extends RedisObject
     stat_add = @redis.sadd(@userlist_prefix(), obj.name)
     stat_hm = @redis.hmset(@user_prefix(obj.name), obj)
 
-    # status = if (stat_add and stat_hm) then null else
-    #     message: ''.concat("Error saving user: `", obj.name, "`.")
-    status = null
-
+    status = if (stat_add and stat_hm) then null else
+        message: ''.concat("Error saving user: `", obj.name, "`.")
     @current = obj
-
-    console.log('SAVING USER')
-    # console.log(status)
-    # console.log(obj)
-
-    fn(status, @current)
+    return fn(status, @current)
 
   ###*
    * Deletes a redis object that matches the query.

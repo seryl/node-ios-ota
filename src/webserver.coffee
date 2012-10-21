@@ -60,14 +60,18 @@ class WebServer
 
     # Silence favicon requests.
     @app.get '/favicon.ico', (req, res, next) =>
-      return next(new restify.codeToHttpError(404, "No favicon exists."))
+      new restify.codeToHttpError(404, "No favicon exists.")
 
     # Returns the current list of users.
     @app.get '/users', (req, res, next) =>
       user = new User
       user.build({ name: "Jim" }).save (err, reply) =>
-        console.log(err)
-        console.log(reply)
+        res.json 200,
+          reply: reply
+        next()
+
+        # console.log(err)
+        # console.log(reply)
         # res.json 200,
         #   err: err
         #   reply: reply
@@ -109,50 +113,51 @@ class WebServer
       #     users: if reply then reply else []
 
     # Creates or updates a user. (Requires Auth)
-    @app.post '/users', (req, res, next) =>
-      @authenticate req, (err, reply) =>
-        if err
-          return res.json reply.code,
-            code: reply.code
-            message: reply.message
+    # @app.post '/users', (req, res, next) =>
+    #   return message: "ok"
+    #   @authenticate req, (err, reply) =>
+    #     if err
+    #       return res.json reply.code,
+    #         code: reply.code
+    #         message: reply.message
 
-        user = req.params.user
-        if user.username == "admin"
-          return res.json 403,
-            code: 403,
-            message: "Unable to modify the administrative user."
+    #     user = req.params.user
+    #     if user.username == "admin"
+    #       return res.json 403,
+    #         code: 403,
+    #         message: "Unable to modify the administrative user."
 
-        if user.username in ["help", "users"]
-          return res.json 403,
-            code: 403
-            message: "Unable to modify internal users."
+    #     if user.username in ["help", "users"]
+    #       return res.json 403,
+    #         code: 403
+    #         message: "Unable to modify internal users."
 
-        if !reply.admin
-          return res.json 401,
-            code: 401,
-            message: "Only administrators are allowed to modify accounts."
+    #     if !reply.admin
+    #       return res.json 401,
+    #         code: 401,
+    #         message: "Only administrators are allowed to modify accounts."
 
-        fs.mkdir [@config.get('repository'), user.username].join('/'),
-          () =>
-            bcrypt.genSalt 10, (err, salt) =>
-              if err
-                return res.json 500,
-                  code: 500,
-                  message: "Error creating bcrypt salt."
+    #     fs.mkdir [@config.get('repository'), user.username].join('/'),
+    #       () =>
+    #         bcrypt.genSalt 10, (err, salt) =>
+    #           if err
+    #             return res.json 500,
+    #               code: 500,
+    #               message: "Error creating bcrypt salt."
 
-              bcrypt.hash user.secret, salt, (error, hash) =>
-                if error
-                  return res.json 500,
-                    code: 500,
-                    message: "Error creating bcrypt hash."
-                user.secret = hash
-                @redis.add_or_update_user user, (err, reply) =>
-                  if err
-                    return res.json 500,
-                      code: 500,
-                      message: "Error updating user: " + user.username
-                  return res.json 200
-                    message: "Successfully updated: " + user.username
+    #           bcrypt.hash user.secret, salt, (error, hash) =>
+    #             if error
+    #               return res.json 500,
+    #                 code: 500,
+    #                 message: "Error creating bcrypt hash."
+    #             user.secret = hash
+    #             @redis.add_or_update_user user, (err, reply) =>
+    #               if err
+    #                 return res.json 500,
+    #                   code: 500,
+    #                   message: "Error updating user: " + user.username
+    #               return res.json 200
+    #                 message: "Successfully updated: " + user.username
 
     # Returns the user-specific info.
     @app.get '/:user', (req, res, next) =>
