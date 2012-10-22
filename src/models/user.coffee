@@ -66,16 +66,6 @@ class User extends RedisObject
       else return fn(null, {})
 
   ###*
-   * Searches for the redis object that matches the query.
-   * @param {Object} (query) The query object to search
-   * @param {Function} (fn) The callback function
-  ###
-  # find_one: (query, fn) =>
-  #   @current = null
-  #   @find query, (err, obj) ->
-  #     fn(err, obj)
-
-  ###*
    * Adds a new redis object of the current type to the database.
    * @param {Object} (obj) The object to add
    * @param {Function} (fn) The callback function

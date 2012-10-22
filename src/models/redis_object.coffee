@@ -45,16 +45,6 @@ class RedisObject
     fn(null, [])
 
   ###*
-   * Searches for the redis object that matches the query.
-   * @param {Object} (query) The query object to search
-   * @param {Function} (fn) The callback function
-  ###
-  find_one: (query, fn) =>
-    @current = null
-    @find query, (err, obj) ->
-      fn(err, obj)
-
-  ###*
    * Saves the current object if there is one.
    * @param {Function} (fn) The callback function
   ###
