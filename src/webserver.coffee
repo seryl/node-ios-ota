@@ -34,29 +34,9 @@ class WebServer
 
     # List help.
     @app.get '/help', (req, res, next) =>
-      res.json 200, services: [
-        # {url: '/', method: 'GET', description: 'version info'},
-        # {url: '/help', method: 'GET', description: 'help information'},
-        # {url: '/users', method: 'GET', description: 'returns the list of users'},
-
-        # {url: '/:user', method: 'GET', description: 'returns the user info'},
-        # {url: '/:user', method: 'POST', description: 'adds or updates a user'},
-        # {url: '/:user', method: 'DELETE', description: 'deletes a user'},
-
-        # {url: '/:user/:app', method: 'GET', description: 'returns the app info'},
-        # {url: '/:user/:app', method: 'POST', description: 'adds or creates an app'},
-        # {url: '/:user/:app', method: 'DELETE', description: 'deletes an app'},
-
-        # {url: '/:/user/:app/branches', method: 'GET', description: 'returns the list of branches for a given app'},
-        # {url: '/:/user/:app/branches/:branch', method: 'GET', description: 'returns the branch info for the app'},
-        # {url: '/:/user/:app/branches/:branch', method: 'POST', description: 'add or updates the branch info for the app'},
-        # {url: '/:/user/:app/branches/:branch', method: 'DELETE', description: 'deletes a branch for the app'},
-
-        # {url: '/:/user/:app/tags', method: 'GET', description: 'returns the list of branches for a given app'},
-        # {url: '/:/user/:app/branches/:branch', method: 'GET', description: 'returns the branch info for the app'},
-        # {url: '/:/user/:app/branches/:branch', method: 'POST', description: 'add or updates the branch info for the app'},
-        # {url: '/:/user/:app/branches/:branch', method: 'DELETE', description: 'deletes a branch for the app'},
-      ]
+      res.json 200
+        message: "restdown docs coming soon."
+      next()
 
     # Silence favicon requests.
     @app.get '/favicon.ico', (req, res, next) =>
@@ -74,51 +54,61 @@ class WebServer
         return next()
 
     # Creates or updates a user. (Requires Auth)
-    @app.post '/users', (req, res, next) =>
-      return message: "ok"
-      @authenticate req, (err, reply) =>
+    @app.post '/users/:user', (req, res, next) =>
+      @authenticate_with_self_admin(req, (err, reply) =>
         if err
-          return res.json reply.code,
+          res.json reply.code,
             code: reply.code
             message: reply.message
+          return next()
+      user)
 
         user = req.params.user
         if user.username == "admin"
-          return res.json 403,
+          res.json 403,
             code: 403,
             message: "Unable to modify the administrative user."
-
-        if user.username in ["help", "users"]
-          return res.json 403,
-            code: 403
-            message: "Unable to modify internal users."
+          return next()
 
         if !reply.admin
-          return res.json 401,
+          res.json 401,
             code: 401,
             message: "Only administrators are allowed to modify accounts."
+          return next()
 
-        fs.mkdir [@config.get('repository'), user.username].join('/'),
-          () =>
-            bcrypt.genSalt 10, (err, salt) =>
-              if err
-                return res.json 500,
-                  code: 500,
-                  message: "Error creating bcrypt salt."
+        user = new User({ name: req.params.user })
 
-              bcrypt.hash user.secret, salt, (error, hash) =>
-                if error
-                  return res.json 500,
-                    code: 500,
-                    message: "Error creating bcrypt hash."
-                user.secret = hash
-                @redis.add_or_update_user user, (err, reply) =>
-                  if err
-                    return res.json 500,
-                      code: 500,
-                      message: "Error updating user: " + user.username
-                  return res.json 200
-                    message: "Successfully updated: " + user.username
+        user.save (err, reply) =>
+          # console.log(err)
+          console.log(reply)
+
+        res.json 200
+          message: "made ness"
+        return next()
+
+
+        # fs.mkdir [@config.get('repository'), user.username].join('/'),
+        #   () =>
+
+        #     bcrypt.genSalt 10, (err, salt) =>
+        #       if err
+        #         return res.json 500,
+        #           code: 500,
+        #           message: "Error creating bcrypt salt."
+
+        #       bcrypt.hash user.secret, salt, (error, hash) =>
+        #         if error
+        #           return res.json 500,
+        #             code: 500,
+        #             message: "Error creating bcrypt hash."
+        #         user.secret = hash
+        #         @redis.add_or_update_user user, (err, reply) =>
+        #           if err
+        #             return res.json 500,
+        #               code: 500,
+        #               message: "Error updating user: " + user.username
+        #           return res.json 200
+        #             message: "Successfully updated: " + user.username
 
     # Returns the user-specific info.
     @app.get '/:user', (req, res, next) =>
@@ -269,5 +259,21 @@ class WebServer
             code: 401,
             message: "Unauthorized: Invalid authentication secret."
         return fn(err, reply)
+
+  ###*
+   * Authenticates the user, and if the user is managing themselves, elevate.
+   * @param {Object} (req) The restify request object
+   * @param {Function} (fn) The callback function
+   * @param {String} (user) The user to test against for elevated privs
+  ###
+  authenticate_with_self_admin: (req, fn, user) =>
+    credentials =
+      username: req.params.username
+      secret: req.params.secret
+
+    @authenticate req, (err, reply) =>
+      if credentials.username == user
+        reply.admin = true
+      return fn(err, reply)
 
 module.exports = WebServer

@@ -1,4 +1,5 @@
 RedisSingleton = require './redis_singleton'
+Config = require '../config'
 
 ###*
  * Acts as a base class for all Redis-based objects.
@@ -9,6 +10,7 @@ class RedisObject
     @base_prefix = "node-ios-ota"
     @object_name = "redis-object"
     @redis = RedisSingleton.get()
+    @config = Config.get()
     @current = obj
 
   ###*

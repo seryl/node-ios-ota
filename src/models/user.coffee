@@ -52,7 +52,7 @@ class User extends RedisObject
    * @param {String} (name) The name of the user to find
    * @param {Function} (fn) The callback function
   ###
-  find: (name, fn) =>
+  find: (name, fn, admin=false) =>
     @current = null
     @list (err, usernames) =>
       if err
@@ -60,17 +60,18 @@ class User extends RedisObject
       if name in usernames
         @redis.hgetall @user_prefix(name), (err, obj) =>
           if err
-            err =
-              message: ''.concat("Error retrieving userinfo for `", name, "`.")
+            err = message: ''.concat(
+              "Error retrieving userinfo for `", name, "`.")
+          if admin then delete obj['secret']
           return fn(err, obj)
       else return fn(null, {})
 
   ###*
-   * Adds a new redis object of the current type to the database.
+   * Adds a new user object, merging and saving the current if it exists.
    * @param {Object} (obj) The object to add
    * @param {Function} (fn) The callback function
   ###
-  save: (fn) =>
+  save: (fn, update_secret=false) =>
     return fn(null, false) unless @current
 
     if typeof @current.name == "string"
@@ -78,11 +79,12 @@ class User extends RedisObject
     target = @current
 
     @list (err, usernames) =>
-      # Update the account
       if target.name in usernames
         @find target.name, (err, userinfo) =>
           userinfo = if userinfo then userinfo else {}
+          secret = target.secret
           target = merge.recursive(userinfo, target)
+          if update_secret then target.secret = secret
           return @save_user(target, fn)
       else return @save_user(target, fn)
 
@@ -94,11 +96,13 @@ class User extends RedisObject
   save_user: (obj, fn) =>
     obj.secret or= generate_identity()
     stat_add = @redis.sadd(@userlist_prefix(), obj.name)
+    stat_add = @redis.sadd(@userlist_prefix(), obj.name)
     stat_hm = @redis.hmset(@user_prefix(obj.name), obj)
 
     status = if (stat_add and stat_hm) then null else
         message: ''.concat("Error saving user: `", obj.name, "`.")
     @current = obj
+    # status = true
     return fn(status, @current)
 
   ###*
@@ -108,5 +112,24 @@ class User extends RedisObject
   ###
   # delete: (fn) =>
   #   fn(null, true)
+
+  ###*
+   * Checks the login for a given user
+  ###
+  check_login: (user, fn) =>
+    @find(user.username, (err, reply) =>
+      # if user.secret == reply.secret
+      fn(err, reply)
+    true)
+    # bcrypt.compare user.secret, reply.secret
+
+  ###*
+   * Creates the directories for a user application.
+   * @param {Object} (user) The username to create directories for
+   * @param {Function} (fn) The callback function
+  ###
+  setup_directories: (user, fn) =>
+    # fs.mkdir [@config.get('repository'), user.username].join('/'), () =>
+
 
 module.exports = User
