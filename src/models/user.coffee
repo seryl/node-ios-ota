@@ -60,9 +60,10 @@ class User extends RedisObject
       if name in usernames
         @redis.hgetall @user_prefix(name), (err, obj) =>
           if err
-            err = message: ''.concat(
-              "Error retrieving userinfo for `", name, "`.")
-          if admin then delete obj['secret']
+            err =
+              code: "RedisLookupFailed"
+              message: ''.concat("Error retrieving userinfo for `", name, "`.")
+          unless admin then delete obj['secret']
           return fn(err, obj)
       else return fn(null, {})
 
@@ -79,13 +80,15 @@ class User extends RedisObject
     target = @current
 
     @list (err, usernames) =>
+      handle_save = (err, userinfo) =>
+        userinfo = if userinfo then userinfo else {}
+        secret = target.secret
+        target = merge.recursive(userinfo, target)
+        if update_secret then target.secret = secret
+        return @save_user(target, fn)
+
       if target.name in usernames
-        @find target.name, (err, userinfo) =>
-          userinfo = if userinfo then userinfo else {}
-          secret = target.secret
-          target = merge.recursive(userinfo, target)
-          if update_secret then target.secret = secret
-          return @save_user(target, fn)
+        @find(target.name, handle_save, true)
       else return @save_user(target, fn)
 
   ###*
@@ -96,13 +99,13 @@ class User extends RedisObject
   save_user: (obj, fn) =>
     obj.secret or= generate_identity()
     stat_add = @redis.sadd(@userlist_prefix(), obj.name)
-    stat_add = @redis.sadd(@userlist_prefix(), obj.name)
     stat_hm = @redis.hmset(@user_prefix(obj.name), obj)
+    @redis.hgetall(@user_prefix(obj.name), (err, reply) =>
+      console.log(reply))
 
     status = if (stat_add and stat_hm) then null else
         message: ''.concat("Error saving user: `", obj.name, "`.")
     @current = obj
-    # status = true
     return fn(status, @current)
 
   ###*
@@ -118,10 +121,23 @@ class User extends RedisObject
   ###
   check_login: (user, fn) =>
     @find(user.username, (err, reply) =>
-      # if user.secret == reply.secret
+      if typeof(reply) == "undefined"
+        err =
+          code: "ErrorConnectingToRedis"
+          message: "Error connecting to redis database."
+        return fn(err, reply)
+
+      if Object.keys(reply).length == 0
+        err =
+          code: "UserDoesNotExist"
+          message: ''.concat("User `", user.username, "` does not exist.")
+
+      if err
+        return fn(err, reply)
+      unless user.secret == reply.secret then err =
+        code: "InvalidPassword"
       fn(err, reply)
     true)
-    # bcrypt.compare user.secret, reply.secret
 
   ###*
    * Creates the directories for a user application.

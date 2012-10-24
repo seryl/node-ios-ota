@@ -55,15 +55,24 @@ class WebServer
 
     # Creates or updates a user. (Requires Auth)
     @app.post '/users/:user', (req, res, next) =>
-      @authenticate_with_self_admin(req, (err, reply) =>
-        if err
-          res.json reply.code,
-            code: reply.code
-            message: reply.message
-          return next()
-      user)
+      user = req.params.user
 
-        user = req.params.user
+      handle_auth_response = (err, reply) =>
+        if err
+          if err.code == "UserDoesNotExist"
+            res.json 401,
+              code: 401
+              message: err.message
+          if err.code == "InvalidPassword"
+            res.json 401,
+              code: 401
+              message: "Unauthorized: Invalid authentication secret."
+          else
+            res.json 500,
+              code: 500,
+              message: reply.message
+          return next()
+
         if user.username == "admin"
           res.json 403,
             code: 403,
@@ -79,12 +88,13 @@ class WebServer
         user = new User({ name: req.params.user })
 
         user.save (err, reply) =>
-          # console.log(err)
           console.log(reply)
 
         res.json 200
-          message: "made ness"
+          message: reply
         return next()
+
+      @authenticate_with_self_admin(req, handle_auth_response, user)
 
 
         # fs.mkdir [@config.get('repository'), user.username].join('/'),
@@ -249,10 +259,16 @@ class WebServer
           admin: true
       return fn(err, reply)
     else
-      @redis.check_login credentials, (err, authenticated) =>
+      user = new User()
+      user.check_login credentials, (err, authenticated) =>
         if authenticated
           reply =
             admin: false
+        else if err.code == "ErrorConnectingToRedis"
+          err = true
+          reply =
+            code: 500
+            message: "Error connecting to redis."
         else
           err = true
           reply =
