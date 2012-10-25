@@ -119,7 +119,7 @@ class User extends RedisObject
   ###
   delete: (username, fn) =>
     @current = { name: username.toLowerCase() }
-    @redis.del(@userlist_prefix())
+    @redis.srem(@userlist_prefix(), username)
     @redis.del(@user_prefix())
     fn(null, true)
 

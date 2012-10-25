@@ -129,20 +129,20 @@ class WebServer
     #       Restify doesn't parse body parameters with delete requests yet.
     #
     #       https://github.com/mcavage/node-restify/issues/180
-    @app.del '/:user', (req, res, next) =>
-      if req.params.user in ["help", "users"]
-        return res.json 403,
+    @app.del '/users/:user', (req, res, next) =>
+      target = req.params.user
+      if target in ["admin"]
+        res.json 403,
           code: 403
           message: "Unable to modify internal services."
+        return next()
 
-      @redis.remove_user req.params.user, (err, reply) =>
-        if err
-          return res.json 500,
-            code: 500,
-            message: ''.concat("Error deleting user `", req.params.user, "`.")
+      user = new User()
+      user.delete(target, (err, reply) =>
         res.json 200,
           message: ''.concat(
-            "Successfully deleted the user `", req.params.user, "`.")
+            "Successfully deleted user `" + target + "`.")
+        return next())
 
     # Returns the list of applications for a specific user.
     @app.get '/:user/:app', (req, res, next) =>
