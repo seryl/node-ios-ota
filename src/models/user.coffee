@@ -12,7 +12,7 @@ class User extends RedisObject
   constructor: ->
     super
     @object_name = 'user'
-    # @applications = new UserApp(@current)
+    @applications = null
 
   ###*
    * The user list prefix.
@@ -153,7 +153,6 @@ class User extends RedisObject
   ###
   setup_directories: (user, fn) =>
     fs.mkdir [@config.get('repository'), user.username].join('/'), () =>
-
-
+      # Check applications and build a directory for each
 
 module.exports = User
