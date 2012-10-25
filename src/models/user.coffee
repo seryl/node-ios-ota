@@ -1,3 +1,4 @@
+fs = require 'fs'
 merge = require 'merge-recursive'
 
 RedisObject = require './redis_object'
@@ -100,8 +101,6 @@ class User extends RedisObject
     obj.secret or= generate_identity()
     stat_add = @redis.sadd(@userlist_prefix(), obj.name)
     stat_hm = @redis.hmset(@user_prefix(obj.name), obj)
-    @redis.hgetall(@user_prefix(obj.name), (err, reply) =>
-      console.log(reply))
 
     status = if (stat_add and stat_hm) then null else
         message: ''.concat("Error saving user: `", obj.name, "`.")
@@ -110,11 +109,14 @@ class User extends RedisObject
 
   ###*
    * Deletes a redis object that matches the query.
-   * @param {Object} (query) The query object to search
+   * @param {String} (username) The username to delete
    * @param {Function} (fn) the callback function
   ###
-  # delete: (fn) =>
-  #   fn(null, true)
+  delete: (username, fn) =>
+    @current = { name: username.toLowerCase() }
+    @redis.del(@userlist_prefix())
+    @redis.del(@user_prefix())
+    fn(null, true)
 
   ###*
    * Checks the login for a given user

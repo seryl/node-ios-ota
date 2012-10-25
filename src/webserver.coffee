@@ -1,5 +1,4 @@
 restify = require 'restify'
-fs = require 'fs'
 formidable = require 'formidable'
 require('pkginfo')(module, 'name', 'version')
 
@@ -56,7 +55,6 @@ class WebServer
     # Creates or updates a user. (Requires Auth)
     @app.post '/users/:user', (req, res, next) =>
       user = req.params.user
-
       handle_auth_response = (err, reply) =>
         if err
           if err.code == "UserDoesNotExist"
@@ -82,11 +80,10 @@ class WebServer
         if !reply.admin
           res.json 401,
             code: 401,
-            message: "Only administrators are allowed to modify accounts."
+            message: "Only administrators are permitted to modify accounts."
           return next()
 
         user = new User({ name: req.params.user })
-
         user.save (err, reply) =>
           console.log(reply)
 
@@ -95,30 +92,6 @@ class WebServer
         return next()
 
       @authenticate_with_self_admin(req, handle_auth_response, user)
-
-
-        # fs.mkdir [@config.get('repository'), user.username].join('/'),
-        #   () =>
-
-        #     bcrypt.genSalt 10, (err, salt) =>
-        #       if err
-        #         return res.json 500,
-        #           code: 500,
-        #           message: "Error creating bcrypt salt."
-
-        #       bcrypt.hash user.secret, salt, (error, hash) =>
-        #         if error
-        #           return res.json 500,
-        #             code: 500,
-        #             message: "Error creating bcrypt hash."
-        #         user.secret = hash
-        #         @redis.add_or_update_user user, (err, reply) =>
-        #           if err
-        #             return res.json 500,
-        #               code: 500,
-        #               message: "Error updating user: " + user.username
-        #           return res.json 200
-        #             message: "Successfully updated: " + user.username
 
     # Returns the user-specific info.
     @app.get '/:user', (req, res, next) =>
