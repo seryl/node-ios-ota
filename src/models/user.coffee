@@ -41,9 +41,9 @@ class User extends RedisObject
    * @param {Object} (filter) The object keys you wish to return (null is all)
    * @param {Function} (fn) The callback function
   ###
-  all: (filter=null, fn) =>
+  all: (filter={}, fn) =>
+    if typeof filter == "function" then fn = filter
     @current = null
-    filter = {} unless filter
     @list (err, usernames) =>
       if (filter.name and Object.keys(filter).length is 1) or err
         return fn(err, usernames)
@@ -53,7 +53,8 @@ class User extends RedisObject
    * @param {String} (name) The name of the user to find
    * @param {Function} (fn) The callback function
   ###
-  find: (name, fn, admin=false) =>
+  find: (name, admin=false, fn) =>
+    if typeof admin == "function" then fn = admin
     @current = null
     @list (err, usernames) =>
       if err
@@ -73,7 +74,11 @@ class User extends RedisObject
    * @param {Object} (obj) The object to add
    * @param {Function} (fn) The callback function
   ###
-  save: (fn, update_secret=false) =>
+  save: (update_secret=false, fn) =>
+    if typeof update_secret == "function" and (
+      typeof fn == "undefined" or typeof fn == "null")
+      fn = update_secret
+      update_secret = false
     return fn(null, false) unless @current
 
     if typeof @current.name == "string"
@@ -147,7 +152,8 @@ class User extends RedisObject
    * @param {Function} (fn) The callback function
   ###
   setup_directories: (user, fn) =>
-    # fs.mkdir [@config.get('repository'), user.username].join('/'), () =>
+    fs.mkdir [@config.get('repository'), user.username].join('/'), () =>
+
 
 
 module.exports = User
