@@ -50,8 +50,7 @@ class UserApp extends RedisObject
     if typeof admin == "function" then fn = admin
     @current = null
     @list (err, applications) =>
-      if err
-        return fn(err, applications)
+      if err then return fn(err, applications)
       # if name in applications
         # Get the branches for the application
         # Get the tags for the application

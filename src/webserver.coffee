@@ -146,14 +146,14 @@ class WebServer
       user = new User()
       user.delete(target, (err, reply) =>
         res.json 200,
-          message: ''.concat(
-            "Successfully deleted user `" + target + "`.")
+          message: "Successfully deleted user `#{target}`."
         return next())
 
     # Creates a new application for a user.
     @app.put '/:user/:app', (req, res, next) =>
       res.json 200
         message: "Successfully updated application `#{req.params.app}`."
+      return next()
 
     # Returns the list of applications for a specific user.
     @app.get '/:user/:app', (req, res, next) =>
@@ -163,12 +163,13 @@ class WebServer
       fs.readdir location.join('/'),
         (err, reply) =>
           if err
-            return res.json 404,
+            res.json 404,
               code: 404
               user: req.params.user
               app: req.params.app
               location: loc
               message: "The application `#{req.params.app}` does not exist."
+            return next()
 
     # Lists all of the branches for a specified user/application.
     @app.get '/:user/:app/branches', (req, res, next) =>
@@ -179,8 +180,9 @@ class WebServer
         (err, reply) =>
           console.log(err)
           console.log(reply)
-          return res.json 200,
+          res.json 200,
             message: "branches"
+          return next()
 
     # Lists all of the tags for a specified user/application.
     @app.get '/:user/:app/tags', (req, res) =>
@@ -188,6 +190,7 @@ class WebServer
       res.json 200,
         name: [req.params.user, req.params.app, 'tags'].join('/'),
         tags: []
+      return next()
 
     # Posts new files to a specified user/application.
     @app.post '/:user/:app/branches', (req, res) ->
@@ -198,6 +201,7 @@ class WebServer
           message: "Recieved Upload",
           fields: fields,
           files: files
+        return next()
 
     # Posts new tags to a specified user/application.
     @app.post '/:user/:app/tags', (req, res) ->
@@ -208,6 +212,7 @@ class WebServer
           message: "Recieved Upload",
           fields: fields,
           files: files
+        return next()
 
   ###*
    * Authenticates the user.
@@ -238,16 +243,12 @@ class WebServer
         reply =
           code: 401,
           message: "Unauthorized: Invalid authentication secret."
-      else
-        reply =
-          admin: true
+      else reply = { admin: true }
       return fn(err, reply)
     else
       user = new User()
       user.check_login credentials, (err, authenticated) =>
-        if authenticated
-          reply =
-            admin: false
+        if authenticated then reply = { admin: false }
         else if err.code == "ErrorConnectingToRedis"
           err = true
           reply =
@@ -272,8 +273,7 @@ class WebServer
       secret: req.params.secret
 
     @authenticate req, (err, reply) =>
-      if credentials.username == user
-        reply.admin = true
+      if credentials.username == user then reply.admin = true
       return fn(err, reply)
 
 module.exports = WebServer

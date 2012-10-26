@@ -56,8 +56,7 @@ class User extends RedisObject
     if typeof admin == "function" then fn = admin
     @current = null
     @list (err, usernames) =>
-      if err
-        return fn(err, usernames)
+      if err then return fn(err, usernames)
       if name in usernames
         @redis.hgetall @user_prefix(name), (err, obj) =>
           if err
@@ -147,8 +146,7 @@ class User extends RedisObject
           code: "UserDoesNotExist"
           message: "User `#{user.username}` does not exist."
 
-      if err
-        return fn(err, reply)
+      if err then return fn(err, reply)
       unless user.secret == reply.secret then err =
         code: "InvalidPassword"
       fn(err, reply)
