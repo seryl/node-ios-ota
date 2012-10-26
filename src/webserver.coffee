@@ -1,3 +1,4 @@
+fs = require 'fs'
 restify = require 'restify'
 formidable = require 'formidable'
 require('pkginfo')(module, 'name', 'version')
@@ -35,7 +36,7 @@ class WebServer
     @app.get '/help', (req, res, next) =>
       res.json 200
         message: "restdown docs coming soon."
-      next()
+      return next()
 
     # Silence favicon requests.
     @app.get '/favicon.ico', (req, res, next) =>
@@ -85,43 +86,53 @@ class WebServer
 
         user = new User({ name: req.params.user })
         user.save (err, reply) =>
-          console.log(reply)
-
-        res.json 200
-          message: reply
+          res.json 200
+            message: reply
         return next()
 
       @authenticate_with_self_admin(req, handle_auth_response, user)
 
     # Returns the user-specific info.
     @app.get '/:user', (req, res, next) =>
-      location = [req.params.user]
-      loc = location.join('/')
-      location.unshift(@config.get('repository'))
-      @redis.get_user req.params.user, (err, user) =>
-        if err
-          return res.json 500,
-            code: 500
-            user: req.params.user
-            message: ''.concat(
-              "Error retrieving info for user `", req.params.user, "`.")
-        if !user
-          return res.json 404,
-            code: 404
-            user: req.params.user
-            message: ''.concat(
-              "The user `", req.params.user, "` does not exist.")
+      username = req.params.user
+      location = username
+      user = new User({ name: username })
+      user.exists(username (err, reply) =>
+        console.log(err)
+        console.log(reply))
+      user.applications().list (err, reply) =>
+        res.json 200
+          location: location
+          applications: reply
+        return next()
 
-        @redis.get_applications req.params.user, (err, apps) =>
-          if err
-            return res.json 500,
-              code: 500
-              message: ''.concat(
-                "Error retrieving apps for user `", loc, "`.")
-          return res.json 200,
-            user: req.params.user
-            location: loc
-            apps: if apps then apps else []
+      # location = [req.params.user]
+      # loc = location.join('/')
+      # location.unshift(@config.get('repository'))
+      # @redis.get_user req.params.user, (err, user) =>
+      #   if err
+      #     return res.json 500,
+      #       code: 500
+      #       user: req.params.user
+      #       message: ''.concat(
+      #         "Error retrieving info for user `", req.params.user, "`.")
+      #   if !user
+      #     return res.json 404,
+      #       code: 404
+      #       user: req.params.user
+      #       message: ''.concat(
+      #         "The user `", req.params.user, "` does not exist.")
+
+      #   @redis.get_applications req.params.user, (err, apps) =>
+      #     if err
+      #       return res.json 500,
+      #         code: 500
+      #         message: ''.concat(
+      #           "Error retrieving apps for user `", loc, "`.")
+      #     return res.json 200,
+      #       user: req.params.user
+      #       location: loc
+      #       apps: if apps then apps else []
 
     # Deletes a user. (Requires Auth)
     # 
@@ -156,6 +167,7 @@ class WebServer
               code: 404
               user: req.params.user
               app: req.params.app
+              location: loc
               message: ''.concat(
                 "The application `", req.params.app, "` does not exist.")
 

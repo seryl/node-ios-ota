@@ -20,14 +20,14 @@ class UserApp extends RedisObject
    * @param {String} (application) The name of the application
   ###
   application_prefix: (application) =>
-    [''.concat(@user_prefix(), application)].join('::')
+    [@user_prefix(), application].join('::')
 
   ###*
    * Returns the list of application names for a given user.
    * @param {Function} (fn) The callback function
   ###
   list: (fn) =>
-    return @redis.smembers((@user_prefix), fn)
+    return @redis.smembers(@application_prefix(), fn)
 
   ###*
    * Returns all of the user objects with the given filter.

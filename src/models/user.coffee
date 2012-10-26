@@ -12,7 +12,6 @@ class User extends RedisObject
   constructor: ->
     super
     @object_name = 'user'
-    @applications = null
 
   ###*
    * The user list prefix.
@@ -124,6 +123,15 @@ class User extends RedisObject
     fn(null, true)
 
   ###*
+   *
+  ###
+  exists: (username, fn) =>
+    console.log(@userlist_prefix())
+    @redis.sismember(@userlist_prefix(), username, (err, reply) =>
+      console.log(err)
+      console.log(reply))
+
+  ###*
    * Checks the login for a given user
   ###
   check_login: (user, fn) =>
@@ -154,5 +162,12 @@ class User extends RedisObject
   setup_directories: (user, fn) =>
     fs.mkdir [@config.get('repository'), user.username].join('/'), () =>
       # Check applications and build a directory for each
+
+  ###*
+   * Returns the applications object for the current user.
+   * @return {Object} The object 
+  ###
+  applications: () =>
+    return new UserApp(@current.name)
 
 module.exports = User
