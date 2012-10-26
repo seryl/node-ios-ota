@@ -52,7 +52,7 @@ class UserApp extends RedisObject
     @list (err, applications) =>
       if err
         return fn(err, applications)
-      if name in applications
+      # if name in applications
         # Get the branches for the application
         # Get the tags for the application
     # fn(null, [])
