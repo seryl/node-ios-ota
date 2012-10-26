@@ -34,28 +34,54 @@ class UserApp extends RedisObject
    * @param {Object} (filter) The object keys you wish to return (null is all)
    * @param {Function} (fn) The callback function
   ###
-  all: (filter=null, fn) =>
-    # @current = null
-    # filter or= {}
-    # @list (err, applications) =>
-    #   if (filter.name and Object.keys(filter).length is 1) or err
-    #     return fn(err, applications)
+  all: (filter={}, fn) =>
+    if typeof filter == "function" then fn = filter
+    @current = null
+    @list (err, applications) =>
+      if (filter.name and Object.keys(filter).length is 1) or err
+        return fn(err, applications)
 
   ###*
    * Searches for the redis objects that match the query.
-   * @param {Object} (query) The query object to search
+   * @param {Object} (name) The name of the application to search for
    * @param {Function} (fn) The callback function
   ###
-  find: (query, fn) =>
-    # @current = null
-    # query or= {}
-    # @list (err, applications) =>
-    #   if err
-    #     return fn(err, applications)
-    #   if query.name in applications
-    #     console.log("GOT IT")
-    #     # Get the user and application hash lookup
+  find: (name, admin=false, fn) =>
+    if typeof admin == "function" then fn = admin
+    @current = null
+    @list (err, applications) =>
+      if err
+        return fn(err, applications)
+      if name in applications
+        # Get the branches for the application
+        # Get the tags for the application
     # fn(null, [])
+
+  ###*
+   * Returns the list of branches for a particular application.
+   * @param {String} (application) The name of the application to retrieve
+  ###
+  branches: (application) =>
+
+  ###*
+   * Returns the branch information and file hashes for the given app/branch.
+   * @param {String} (application) The name of the application to retrieve
+   * @param {String} (branch) The name of the branch to retrieve
+  ###
+  branch_info: (application, branch) =>
+
+  ###*
+   * Returns the list of tags for a particular application.
+   * @param {String} (application) The name of the application to retrieve
+  ###
+  tags: (application) =>
+
+  ###*
+   * Returns the tag information and file hashes for the given app/branch.
+   * @param {String} (application) The name of the application to retrieve
+   * @param {String} (tag) The name of the tag to retrieve
+  ###
+  tag_info: (application, tag) =>
 
   ###*
    * Searches for the redis object that matches the query.
