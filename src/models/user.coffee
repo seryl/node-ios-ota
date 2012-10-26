@@ -63,7 +63,7 @@ class User extends RedisObject
           if err
             err =
               code: "RedisLookupFailed"
-              message: ''.concat("Error retrieving userinfo for `", name, "`.")
+              message: "Error retrieving userinfo for `#{name}`."
           unless admin then delete obj['secret']
           return fn(err, obj)
       else return fn(null, {})
@@ -99,7 +99,7 @@ class User extends RedisObject
   ###*
    * Saves the given user object.
    * @param {Object} (obj) The user object to save
-   * @return {Object} The status of the object save
+   * @param {Function} The callback function
   ###
   save_user: (obj, fn) =>
     obj.secret or= generate_identity()
@@ -107,7 +107,7 @@ class User extends RedisObject
     stat_hm = @redis.hmset(@user_prefix(obj.name), obj)
 
     status = if (stat_add and stat_hm) then null else
-        message: ''.concat("Error saving user: `", obj.name, "`.")
+        message: "Error saving user: `#{obj.name}`."
     @current = obj
     return fn(status, @current)
 
@@ -123,13 +123,13 @@ class User extends RedisObject
     fn(null, true)
 
   ###*
-   *
+   * Checks whether or not the given user exists.
+   * @param {String} (username) The username to check the existance of
+   * @param {Function} (fn) The callback function
   ###
   exists: (username, fn) =>
-    console.log(@userlist_prefix())
-    @redis.sismember(@userlist_prefix(), username, (err, reply) =>
-      console.log(err)
-      console.log(reply))
+    @redis.sismember @userlist_prefix(), username, (err, reply) =>
+      fn(err, reply)
 
   ###*
    * Checks the login for a given user
@@ -145,7 +145,7 @@ class User extends RedisObject
       if Object.keys(reply).length == 0
         err =
           code: "UserDoesNotExist"
-          message: ''.concat("User `", user.username, "` does not exist.")
+          message: "User `#{user.username}` does not exist."
 
       if err
         return fn(err, reply)

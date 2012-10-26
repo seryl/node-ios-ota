@@ -88,7 +88,7 @@ class WebServer
         user.save (err, reply) =>
           res.json 200
             message: reply
-        return next()
+          return next()
 
       @authenticate_with_self_admin(req, handle_auth_response, user)
 
@@ -97,42 +97,37 @@ class WebServer
       username = req.params.user
       location = username
       user = new User({ name: username })
-      user.exists(username (err, reply) =>
-        console.log(err)
-        console.log(reply))
-      user.applications().list (err, reply) =>
-        res.json 200
-          location: location
-          applications: reply
-        return next()
+      user.exists username, (err, user_resp) =>
+        if err
+          res.json 500,
+            code: 500
+            location: location
+            user: username
+            message: "Error retrieving info for user `#{username}`."
+          return next()
 
-      # location = [req.params.user]
-      # loc = location.join('/')
-      # location.unshift(@config.get('repository'))
-      # @redis.get_user req.params.user, (err, user) =>
-      #   if err
-      #     return res.json 500,
-      #       code: 500
-      #       user: req.params.user
-      #       message: ''.concat(
-      #         "Error retrieving info for user `", req.params.user, "`.")
-      #   if !user
-      #     return res.json 404,
-      #       code: 404
-      #       user: req.params.user
-      #       message: ''.concat(
-      #         "The user `", req.params.user, "` does not exist.")
+        if !user_resp
+          res.json 404,
+            code: 404
+            location: location
+            user: username
+            message: "The user `#{username}` does not exist."
+          return next()
 
-      #   @redis.get_applications req.params.user, (err, apps) =>
-      #     if err
-      #       return res.json 500,
-      #         code: 500
-      #         message: ''.concat(
-      #           "Error retrieving apps for user `", loc, "`.")
-      #     return res.json 200,
-      #       user: req.params.user
-      #       location: loc
-      #       apps: if apps then apps else []
+        user.applications().list (err, reply) =>
+          if err
+            res.json 500,
+              code: 500
+              location: location
+              user: username
+              message: "Error retrieving apps for user `#{username}`."
+            return next()
+
+          res.json 200
+            user: username
+            location: location
+            applications: reply
+          return next()
 
     # Deletes a user. (Requires Auth)
     # 
@@ -155,6 +150,11 @@ class WebServer
             "Successfully deleted user `" + target + "`.")
         return next())
 
+    # Creates a new application for a user.
+    @app.put '/:user/:app', (req, res, next) =>
+      res.json 200
+        message: "Successfully updated application `#{req.params.app}`."
+
     # Returns the list of applications for a specific user.
     @app.get '/:user/:app', (req, res, next) =>
       location = [req.params.user, req.params.app]
@@ -168,8 +168,7 @@ class WebServer
               user: req.params.user
               app: req.params.app
               location: loc
-              message: ''.concat(
-                "The application `", req.params.app, "` does not exist.")
+              message: "The application `#{req.params.app}` does not exist."
 
     # Lists all of the branches for a specified user/application.
     @app.get '/:user/:app/branches', (req, res, next) =>
