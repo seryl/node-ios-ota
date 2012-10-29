@@ -13,10 +13,6 @@ describe 'UserApplication', ->
     userapp = new UserApplication("zoidberg")
     userapp.object_name.should.equal "application"
 
-  # it "should have a userlist_prefix of `node-ios-ota::users`", ->
-  #   user = new User()
-  #   user.userlist_prefix().should.equal "node-ios-ota::users"
-
-  # it "should have a user_prefix of `node-ios-ota::user::<name>`", ->
-  #   user = new User()
-  #   user.user_prefix("fry").should.equal "node-ios-ota::user::fry"
+  it "should have a user_prefix of `node-ios-ota::applications::<name>`", ->
+    userapp = new UserApplication("zoidberg")
+    userapp.user_prefix().should.equal "node-ios-ota::applications::zoidberg"
