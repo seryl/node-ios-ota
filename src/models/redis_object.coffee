@@ -33,16 +33,17 @@ class RedisObject
    * @param {Function} (fn) The callback function
   ###
   all: (filter=null, fn) =>
+    if typeof filter == "function" then fn = filter
     @current = null
-    filter = {} unless filter
     fn(null, [])
 
   ###*
    * Searches for the redis objects that match the query.
-   * @param {Object} (query) The query object to search
+   * @param {String} (name) The name of the object to find
    * @param {Function} (fn) The callback function
   ###
-  find: (query, fn) =>
+  find: (name, admin=false, fn) =>
+    if typeof admin == "function" then fn = admin
     @current = null
     fn(null, [])
 

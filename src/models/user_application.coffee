@@ -124,4 +124,12 @@ class UserApp extends RedisObject
   # delete: (fn) =>
   #   fn(null, true)
 
+  ###*
+   * Deletes every user_application that currently exists.
+   * @param {Function} (fn) The callback function
+  ###
+  # delete_all: (fn) =>
+  #   @list (err, usernames) =>
+  #     async.forEach(usernames, @delete, fn)
+
 module.exports = UserApp

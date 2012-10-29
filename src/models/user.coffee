@@ -1,5 +1,6 @@
 fs = require 'fs'
 merge = require 'merge-recursive'
+async = require 'async'
 
 RedisObject = require './redis_object'
 {generate_identity} = require '../identity'
@@ -118,8 +119,16 @@ class User extends RedisObject
   delete: (username, fn) =>
     @current = { name: username.toLowerCase() }
     @redis.srem(@userlist_prefix(), username)
-    @redis.del(@user_prefix())
+    @redis.del(@user_prefix(username))
     fn(null, true)
+
+  ###*
+   * Deletes every user that currently exists.
+   * @param {Function} (fn) The callback function
+  ###
+  delete_all: (fn) =>
+    @list (err, usernames) =>
+      async.forEach(usernames, @delete, fn)
 
   ###*
    * Checks whether or not the given user exists.
