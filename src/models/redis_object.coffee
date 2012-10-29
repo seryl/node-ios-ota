@@ -17,7 +17,7 @@ class RedisObject
    * Returns the redis prefix for the current object type.
    * @return {String} The redis object prefix for the current object
   ###
-  prefix: => [@base_prefix, @object_name].join('-')
+  prefix: => [@base_prefix, @object_name].join('::')
 
   ###*
    * Creates a new redis object.
