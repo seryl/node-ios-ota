@@ -1,0 +1,4 @@
+language: nodejs
+node_js:
+  - 0.8
+
