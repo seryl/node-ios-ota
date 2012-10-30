@@ -4,10 +4,10 @@ async = require 'async'
 
 RedisObject = require './redis_object'
 {generate_identity} = require '../identity'
-UserApp = require './user_application'
+Application = require './application'
 
 ###*
- * Acts as a base class for all Redis-based objects.
+ * A helper for representing a particular user and their applications.
 ###
 class User extends RedisObject
   constructor: ->
@@ -120,6 +120,7 @@ class User extends RedisObject
     @current = { name: username.toLowerCase() }
     @redis.srem(@userlist_prefix(), username)
     @redis.del(@user_prefix(username))
+    # @applications
     fn(null, true)
 
   ###*
@@ -175,6 +176,6 @@ class User extends RedisObject
    * @return {Object} The object 
   ###
   applications: () =>
-    return new UserApp(@current.name)
+    return new Application(@current.name)
 
 module.exports = User
