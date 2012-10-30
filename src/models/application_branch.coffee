@@ -15,7 +15,7 @@ class ApplicationBranch extends RedisObject
    * Returns the the prefix for the branchlist.
    * @return {String} The branchlist prefix for the current application
   ###
-  branchlist_prefix: () =>
+  branchlist_prefix: =>
     app = new Application(@user)
     return [app.applist_prefix(), @application, @object_name].join('::')
 
@@ -26,7 +26,7 @@ class ApplicationBranch extends RedisObject
   branch_prefix: (branch) =>
     return [@branchlist_prefix, branch].join('::')
 
-  list: () =>
+  list: =>
     branch_prefix = @get_app_build_prefix application, "branches"
     return @redis.smembers(branch_prefix)
 

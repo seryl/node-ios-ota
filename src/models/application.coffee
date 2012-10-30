@@ -15,7 +15,7 @@ class Application extends RedisObject
   ###*
    * The applications prefix for the specified user.
   ###
-  applist_prefix: () =>
+  applist_prefix: =>
     ''.concat(@prefix(), 's', '::', @user)
 
   ###*
@@ -60,20 +60,6 @@ class Application extends RedisObject
     # fn(null, [])
 
   ###*
-   * Returns the list of branches for the current application.
-   * @param {Function} (fn) The callback function
-  ###
-  branches: (fn) =>
-    return new ApplicationBranch(@current.name)
-
-  ###*
-   * Returns the list of tags for the current application.
-   * @param {Function} (fn) The callback function
-  ###
-  tags: (application, fn) =>
-    return new ApplicationTag(@current.name)
-
-  ###*
    * Adds a new redis object of the current type to the database.
    * @param {Object} (obj) The object to add
    * @param {Function} (fn) The callback function
@@ -115,5 +101,19 @@ class Application extends RedisObject
   delete_all: (fn) =>
     @list (err, applications) =>
       async.forEach(applications, @delete, fn)
+
+  ###*
+   * Returns the list of branches for the current application.
+   * @return {Object} The ApplicationBranch object for the current application
+  ###
+  branches: =>
+    return new ApplicationBranch(@current.name)
+
+  ###*
+   * Returns the list of tags for the current application.
+   * @return {Object} The ApplicationTag object for the current application
+  ###
+  tags: =>
+    return new ApplicationTag(@current.name)
 
 module.exports = Application

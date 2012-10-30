@@ -173,9 +173,9 @@ class User extends RedisObject
 
   ###*
    * Returns the applications object for the current user.
-   * @return {Object} The object 
+   * @return {Object} The Application object for the current user
   ###
-  applications: () =>
+  applications: =>
     return new Application(@current.name)
 
 module.exports = User

@@ -24,7 +24,7 @@ class WebServer
     @logger.info "Webserver is up at: http://0.0.0.0:#{@port}"
 
   # Sets up the webserver routing.
-  setup_routing: () =>
+  setup_routing: =>
 
     # Returns the base name and version of the app.
     @app.get '/', (req, res, next) =>

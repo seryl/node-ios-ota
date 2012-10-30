@@ -8,7 +8,7 @@ Logger = require './logger'
  * The command line interface class.
 ###
 class CLI
-  constructor: () ->
+  constructor: ->
     @config = Config.get()
     @logger = Logger.get()
     @argv = optimist
@@ -64,7 +64,7 @@ class CLI
       process.exit(0)
 
   # Configures the nconf mapping where the priority matches the order
-  configure: () =>
+  configure: =>
     @set_overrides()
     @set_argv()
     @set_env()
@@ -72,26 +72,26 @@ class CLI
     @set_defaults()
 
   # Sets up forceful override values
-  set_overrides: () =>
+  set_overrides: =>
     @config.overrides({
       })
 
   # Sets up the configuration for cli arguments
-  set_argv: () =>
+  set_argv: =>
     @config.add('optimist_args', {type: 'literal', store: @argv})
 
   # Sets up the environment configuration
-  set_env: () =>
+  set_env: =>
     @config.env({
       whitelist: []
       })
 
   # Sets up the file configuration
-  set_file: () =>
+  set_file: =>
     @config.file({ file: @config.get('c') })
 
   # Sets up the default configuration
-  set_defaults: () =>
+  set_defaults: =>
     @config.defaults({
       })
 
