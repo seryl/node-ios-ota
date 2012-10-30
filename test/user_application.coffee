@@ -86,6 +86,24 @@ describe 'UserApplication', ->
           assert.equal reply.length, 0
           done()
 
+  it "should be able to add a single tag to an app"
+
+  it "should be able to add a single branch to an app"
+
+  it "should be able to remove a single tag from an app" #, (done) ->
+    # user = new User({ name: "zoidberg" })
+    # user.save (err, reply) ->
+    #   user.applications().build('brainspawn').save (err, reply) ->
+    #     user.applications().tags('bspawn1').save (err, reply) ->
+    #       user.applications().tags('bspawn2').save (err, reply) ->
+
+  it "should be able to remove a single branch from an app" #, (done) ->
+    # user = new User({ name: "zoidberg" })
+    # user.save (err, reply) ->
+    #   user.applications().build('brainslug').save (err, reply) ->
+    #     user.applications().branches 'slugbranch1', (err, reply) ->
+    #       user.applications().branches 'slugbranch2', (err, reply) ->
+
   it "should be able to list the applications for a given user", (done) ->
     user = new User({ name: "zoidberg" })
     user.save (err, reply) ->
@@ -95,6 +113,6 @@ describe 'UserApplication', ->
             assert.equal err, null
             assert.isArray reply
             assert.equal reply.length, 2
-            assert.equal reply[0], 'silly_dog'
-            assert.equal reply[1], 'silly_duck'
+            assert.equal ('silly_dog' in reply), true
+            assert.equal ('silly_duck' in reply), true
             done()

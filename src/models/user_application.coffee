@@ -76,6 +76,14 @@ class UserApp extends RedisObject
     return @redis.smembers(branch_prefix, fn)
 
   ###*
+   * Inserts a new branch into the given application.
+   * @param {String} (application) The name of the application to target
+   * @param {String} (branch) The name of the branch to add
+  ###
+  add_branch: (application, branch, fn) =>
+    return fn(null, true)
+
+  ###*
    * Returns the branch information and file hashes for the given app/branch.
    * @param {String} (application) The name of the application to retrieve
    * @param {String} (branch) The name of the branch to retrieve
@@ -90,6 +98,14 @@ class UserApp extends RedisObject
   tags: (application, fn) =>
     tags_prefix = @get_app_build_prefix application, "tags"
     return @redis.smembers(tags_prefix, fn)
+
+  ###*
+   * Inserts a new tag into the given application.
+   * @param {String} (application) The name of the application to target
+   * @param {String} (tag) The name of the tag to add
+  ###
+  add_tag: (application, tag, fn) =>
+    return fn(null, true)
 
   ###*
    * Returns the tag information and file hashes for the given app/branch.
@@ -108,23 +124,7 @@ class UserApp extends RedisObject
     target = @current
     @all { name: true }, (err, applications) =>
       stat_add = @redis.sadd(@applist_prefix(), target)
-      # tags_add = @redis.app_prefix
-      # stat_
       return fn(null, true)
-
-    # @all { name: true }, (err, usernames) =>
-    #   if target.name in usernames
-    #     @current = target
-    #     return fn(null, false)
-
-    #   target.secret = generate_identity()
-    #   stat_add = @redis.sadd(@app_prefix())
-    #   stat_hm = @redis.hmset(@user_prefix(), target)
-    #   @current = target
-
-    #   status = if (stat_add and stat_hm) then null else
-    #     message: "Error saving user"
-    #   return fn(status, @current)
 
   ###*
    * Saves the given application object for the current user
@@ -148,32 +148,41 @@ class UserApp extends RedisObject
     @current = { name: application.toLowerCase() }
     tag_prefix = @get_app_build_prefix application, "tags"
     branch_prefix = @get_app_build_prefix application, "branches"
-    
-    @delete_tags application, (err, reply) =>
-      @delete_branches application, (err, reply) =>
+
+    @delete_all_tags application, (err, reply) =>
+      @delete_all_branches application, (err, reply) =>
         @redis.srem(@applist_prefix(), application)
         fn(null, true)
 
   ###*
-   * Deletes the tags for a given application matching the given name.
+   * Deletes a single tag for the given application.
   ###
-  delete_tags: (application, tags='*', fn) =>
-    if typeof tags == "function" then fn = tags
-    fn(null, true)
-    # if typeof tags == "string"
-    #   if tags == "*"
-    #     @tags application, (err, reply) =>
+  delete_tag: (application, tag, fn) =>
+
+
+  ###*
+   * Deletes all of the tags for a given application.
+  ###
+  delete_all_tags: (application, fn) =>
+    @tags application, (err, taglist) =>
+      async.forEach(taglist, @delete_tag, fn)
+
+  ###*
+   * Deletes a single branch for the given application.
+   * @param {String} (application) The name of the target application
+   * @param {String} (branch) The name of the target branch
+   * @param {Function} (fn) The callback function
+  ###
+  delete_branch: (application, branch, fn) =>
 
   ###*
    * Deletes the branches for a given application matching the given name.
-   * @param {String}
+   * @param {String} (application) The name of the target application
+   * @param {Function} (fn) The callback function
   ###
-  delete_branches: (application, branches='*', fn) =>
-    if typeof branches == "function" then fn = branches
-    fn(null, true)
-    # if typeof branches == "String"
-    #   if branches == "*"
-    #     @branches application, (err, reply) =>
+  delete_all_branches: (application, fn) =>
+    @branches application, (err, branchlist) =>
+      async.forEach(branchlist, @delete_branch, fn)
 
   ###*
    * Deletes every application for the user that currently exists.
