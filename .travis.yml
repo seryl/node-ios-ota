@@ -1,5 +1,7 @@
 language: node_js
 node_js:
   - 0.8
+services:
+  - redis-server
 before_script: "npm install --dev"
 script: "cake build; cake -r min test"
