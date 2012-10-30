@@ -6,15 +6,19 @@ describe 'UserApplication', ->
   beforeEach (done) ->
     user = new User()
     user.delete_all ->
-      user = new User({ name: "zoidberg" })
-      user.save (err, username) ->
-        done()
+      user.applications().delete_all ->
+        user = new User({ name: "zoidberg" })
+        user.save (err, username) ->
+          console.log err
+          console.log username
+          done()
 
   # TODO: Make sure to delete application, tags, branches
   after (done) ->
     user = new User()
     user.delete_all ->
-      done()
+      user.applications().delete_all ->
+        done()
 
   it "should have the object name `application`", ->
     userapp = new UserApplication("zoidberg")
@@ -85,13 +89,12 @@ describe 'UserApplication', ->
           assert.equal reply.length, 0
           done()
 
-  it "should be able to list the applications for a given user" #, (done) ->
-    # user = new User()
-    # user = new User({ name: "zoidberg" })
-    # user.save (err, reply) ->
-    #   userapp = new UserApplication(reply.username)
-    #   userapp.list (err, reply) ->
-    #     assert.equal err, null
-    #     assert.isArray reply
-    #     assert.equal reply.length, 1
-    #     done()
+  it "should be able to list the applications for a given user", (done) ->
+    user = new User({ name: "zoidberg" })
+    user.save (err, reply) ->
+      user.applications().build('silly_duck').save (err, reply) ->
+        user.applications().build('silly_dog').save (err, reply) ->
+          user.applications().list (err, reply) ->
+            console.log err
+            console.log reply
+            done()

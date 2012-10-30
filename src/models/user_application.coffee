@@ -86,8 +86,8 @@ class UserApp extends RedisObject
    * @param {Function} (fn) The callback function
   ###
   tags: (application, fn) =>
-    branch_prefix = @get_app_build_prefix application, "tags"
-    return @redis.smembers(branch_prefix, fn)
+    tags_prefix = @get_app_build_prefix application, "tags"
+    return @redis.smembers(tags_prefix, fn)
 
   ###*
    * Returns the tag information and file hashes for the given app/branch.
@@ -95,16 +95,6 @@ class UserApp extends RedisObject
    * @param {String} (tag) The name of the tag to retrieve
   ###
   tag_info: (application, tag) =>
-
-  ###*
-   * Searches for the redis object that matches the query.
-   * @param {Object} (query) The query object to search
-   * @param {Function} (fn) The callback function
-  ###
-  # find_one: (query, fn) =>
-  #   @current = null
-  #   @find query, (err, obj) ->
-  #     fn(err, obj)
 
   ###*
    * Adds a new redis object of the current type to the database.
@@ -116,7 +106,7 @@ class UserApp extends RedisObject
     target = @current
     @all { name: true }, (err, applications) =>
       stat_add = @redis.sadd(@applist_prefix(), target)
-      tags_add = @redis.app_prefix
+      # tags_add = @redis.app_prefix
       # stat_
       return fn(null, true)
 
@@ -149,18 +139,48 @@ class UserApp extends RedisObject
 
   ###*
    * Deletes a redis object that matches the query.
-   * @param {Object} (query) The query object to search
+   * @param {String} (application) The name of the application to delete
    * @param {Function} (fn) the callback function
   ###
-  # delete: (fn) =>
-  #   fn(null, true)
+  delete: (application, fn) =>
+    @current = { name: application.toLowerCase() }
+
+    tag_prefix = @get_app_build_prefix application, "tags"
+    branch_prefix = @get_app_build_prefix application, "branches"
+    @delete_tags application, (err, reply) =>
+      @delete_branches application, (err, reply) =>
+        @redis.srem(@applist_prefix(), application)
+        fn(null, true)
 
   ###*
-   * Deletes every user_application that currently exists.
+   * Deletes the tags for a given application matching the given name.
+  ###
+  delete_tags: (application, tags='*', fn) =>
+    if typeof tags == "function" then fn = tags
+    fn(null, true)
+    # if typeof tags == "string"
+    #   if tags == "*"
+    #     @tags application, (err, reply) =>
+
+  ###*
+   * Deletes the branches for a given application matching the given name.
+   * @param {String}
+  ###
+  delete_branches: (application, branches='*', fn) =>
+    if typeof branches == "function" then fn = branches
+    fn(null, true)
+    # if typeof branches == "String"
+    #   if branches == "*"
+    #     @branches application, (err, reply) =>
+
+  ###*
+   * Deletes every application for the user that currently exists.
    * @param {Function} (fn) The callback function
   ###
-  # delete_all: (fn) =>
-  #   @list (err, usernames) =>
-  #     async.forEach(usernames, @delete, fn)
+  delete_all: (fn) =>
+    @list (err, applications) =>
+      console.log err
+      console.log applications
+      async.forEach(applications, @delete, fn)
 
 module.exports = UserApp
