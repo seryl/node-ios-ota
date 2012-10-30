@@ -1,3 +1,5 @@
+async = require 'async'
+
 RedisObject = require './redis_object'
 {generate_identity} = require '../identity'
 
@@ -144,9 +146,9 @@ class UserApp extends RedisObject
   ###
   delete: (application, fn) =>
     @current = { name: application.toLowerCase() }
-
     tag_prefix = @get_app_build_prefix application, "tags"
     branch_prefix = @get_app_build_prefix application, "branches"
+    
     @delete_tags application, (err, reply) =>
       @delete_branches application, (err, reply) =>
         @redis.srem(@applist_prefix(), application)
@@ -179,8 +181,6 @@ class UserApp extends RedisObject
   ###
   delete_all: (fn) =>
     @list (err, applications) =>
-      console.log err
-      console.log applications
       async.forEach(applications, @delete, fn)
 
 module.exports = UserApp

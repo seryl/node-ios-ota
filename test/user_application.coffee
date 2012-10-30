@@ -2,21 +2,18 @@ User = require '../src/models/user'
 UserApplication = require '../src/models/user_application'
 
 describe 'UserApplication', ->
-  # TODO: Make sure to delete application, tags, branches
   beforeEach (done) ->
     user = new User()
     user.delete_all ->
+      user = new User({ name: "zoidberg" })
       user.applications().delete_all ->
-        user = new User({ name: "zoidberg" })
         user.save (err, username) ->
-          console.log err
-          console.log username
           done()
 
-  # TODO: Make sure to delete application, tags, branches
   after (done) ->
     user = new User()
     user.delete_all ->
+      user = new User({ name: "zoidberg" })
       user.applications().delete_all ->
         done()
 
@@ -72,8 +69,8 @@ describe 'UserApplication', ->
   it "should return an empty list of tags when there are none", (done) ->
     user = new User({ name: "zoidberg" })
     user.save (err, reply) ->
-      user.applications().build('mooorrrooroo').save (err, reply) ->
-        user.applications().tags 'mooorrrooroo', (err, reply) ->
+      user.applications().build('mooorrrooroo!').save (err, reply) ->
+        user.applications().tags 'mooorrrooroo!', (err, reply) ->
           assert.equal err, null
           assert.isArray reply
           assert.equal reply.length, 0
@@ -82,8 +79,8 @@ describe 'UserApplication', ->
   it "should return an empty list of branches when there are none", (done) ->
     user = new User({ name: "zoidberg" })
     user.save (err, reply) ->
-      user.applications().build('mooorrrooroo').save (err, reply) ->
-        user.applications().branches 'mooorrrooroo', (err, reply) ->
+      user.applications().build('mooorrrooroo?').save (err, reply) ->
+        user.applications().branches 'mooorrrooroo?', (err, reply) ->
           assert.equal err, null
           assert.isArray reply
           assert.equal reply.length, 0
@@ -95,6 +92,9 @@ describe 'UserApplication', ->
       user.applications().build('silly_duck').save (err, reply) ->
         user.applications().build('silly_dog').save (err, reply) ->
           user.applications().list (err, reply) ->
-            console.log err
-            console.log reply
+            assert.equal err, null
+            assert.isArray reply
+            assert.equal reply.length, 2
+            assert.equal reply[0], 'silly_dog'
+            assert.equal reply[1], 'silly_duck'
             done()
