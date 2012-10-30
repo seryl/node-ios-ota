@@ -12,22 +12,22 @@ class UserApp extends RedisObject
   ###*
    * The applications prefix for the specified user.
   ###
-  user_prefix: () =>
+  applist_prefix: () =>
     ''.concat(@prefix(), 's', '::', @user)
 
   ###*
    * The user-specific application prefix for a given application.
    * @param {String} (application) The name of the application
   ###
-  application_prefix: (application) =>
-    [@user_prefix(), application].join('::')
+  app_prefix: (application) =>
+    [@applist_prefix(), application].join('::')
 
   ###*
    * Returns the list of application names for a given user.
    * @param {Function} (fn) The callback function
   ###
   list: (fn) =>
-    return @redis.smembers(@application_prefix(), fn)
+    return @redis.smembers(@applist_prefix(), fn)
 
   ###*
    * Returns all of the user objects with the given filter.
@@ -57,10 +57,21 @@ class UserApp extends RedisObject
     # fn(null, [])
 
   ###*
+   * Returns the application build info for either a branch or tag.
+   * @param {String} (application) The name of the application to retrieve
+   * @param {String} (dtype) The data type to get `branches` or `tags`
+  ###
+  get_app_build_prefix: (application, dtype) =>
+    return [@applist_prefix(), application, dtype].join('::')
+
+  ###*
    * Returns the list of branches for a particular application.
    * @param {String} (application) The name of the application to retrieve
+   * @param {Function} (fn) The callback function
   ###
-  branches: (application) =>
+  branches: (application, fn) =>
+    branch_prefix = @get_app_build_prefix application, "branches"
+    return @redis.smembers(branch_prefix, fn)
 
   ###*
    * Returns the branch information and file hashes for the given app/branch.
@@ -72,8 +83,11 @@ class UserApp extends RedisObject
   ###*
    * Returns the list of tags for a particular application.
    * @param {String} (application) The name of the application to retrieve
+   * @param {Function} (fn) The callback function
   ###
-  tags: (application) =>
+  tags: (application, fn) =>
+    branch_prefix = @get_app_build_prefix application, "tags"
+    return @redis.smembers(branch_prefix, fn)
 
   ###*
    * Returns the tag information and file hashes for the given app/branch.
@@ -100,7 +114,11 @@ class UserApp extends RedisObject
   save: (fn) =>
     return fn(null, false) unless @current
     target = @current
-    console.log('target: ' + target)
+    @all { name: true }, (err, applications) =>
+      stat_add = @redis.sadd(@applist_prefix(), target)
+      tags_add = @redis.app_prefix
+      # stat_
+      return fn(null, true)
 
     # @all { name: true }, (err, usernames) =>
     #   if target.name in usernames
@@ -108,13 +126,26 @@ class UserApp extends RedisObject
     #     return fn(null, false)
 
     #   target.secret = generate_identity()
-    #   stat_add = @redis.sadd(@application_prefix())
+    #   stat_add = @redis.sadd(@app_prefix())
     #   stat_hm = @redis.hmset(@user_prefix(), target)
     #   @current = target
 
     #   status = if (stat_add and stat_hm) then null else
     #     message: "Error saving user"
     #   return fn(status, @current)
+
+  ###*
+   * Saves the given application object for the current user
+  ###
+  save_app: (obj, fn) =>
+    obj.secret or= generate_identity()
+    stat_add = @redis.sadd(@userlist_prefix(), obj.name)
+    stat_hm = @redis.hmset(@user_prefix(obj.name), obj)
+
+    status = if (stat_add and stat_hm) then null else
+        message: "Error saving user: `#{obj.name}`."
+    @current = obj
+    return fn(status, @current)
 
   ###*
    * Deletes a redis object that matches the query.

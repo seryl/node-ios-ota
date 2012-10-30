@@ -6,6 +6,11 @@ describe 'User', ->
     user.delete_all ->
       done()
 
+  after (done) ->
+    user = new User()
+    user.delete_all ->
+      done()
+
   it "should have the object name `user`", ->
     user = new User()
     user.object_name.should.equal "user"
@@ -38,6 +43,13 @@ describe 'User', ->
       assert.equal err, null
       assert.isArray reply
       assert.equal reply.length, 0
+      done()
+
+  it "should return (null, false) when adding an empty user", (done) ->
+    user = new User()
+    user.save (err, reply) ->
+      assert.equal err, null
+      assert.equal reply, false
       done()
 
   it "should be able to add a user", (done) ->
@@ -81,7 +93,7 @@ describe 'User', ->
         err.code.should.equal "InvalidPassword"
         done()
 
-  it "should be able to check whether the login was successful", (done) ->
+  it "should be able to check whether a login was successful", (done) ->
     user = new User({ name: "nibbler" })
     user.save (err, reply) ->
       assert.equal err, null
@@ -90,3 +102,11 @@ describe 'User', ->
       user.check_login credentials, (err, reply) ->
         assert.equal err, null
         done()
+
+  it "should be able to return the list of user applications", (done) ->
+    user = new User({ name: "Calculon" })
+    user.applications().list (err, reply) ->
+      assert.equal err, null
+      assert.isArray reply
+      assert.equal reply.length, 0
+      done()
