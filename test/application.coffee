@@ -3,16 +3,13 @@ Application = require '../src/models/application'
 
 describe 'Application', ->
   beforeEach (done) ->
-    user = new User()
-    user.delete_all ->
+    new User().delete_all ->
       user = new User({ name: "zoidberg" })
-      user.applications().delete_all ->
-        user.save (err, username) ->
-          done()
+      user.save (err, username) ->
+        done()
 
   after (done) ->
-    user = new User()
-    user.delete_all ->
+    new User().delete_all ->
       user = new User({ name: "zoidberg" })
       user.applications().delete_all ->
         done()

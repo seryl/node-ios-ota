@@ -1,7 +1,16 @@
-User = require '../src/models/user'
 ApplicationTag = require '../src/models/application_tag'
 
 describe 'ApplicationTag', ->
+  it "should be able to generate a prefix for the tag list", ->
+   at = new ApplicationTag("zoidberg", "brainslugs", "1.0")
+   tlist_prefix = "node-ios-ota::applications::zoidberg::brainslugs::tags"
+   assert.equal at.taglist_prefix(), tlist_prefix
+
+  it "should be able to generate a prefix for a specific tag", ->
+    at = new ApplicationTag("zoidberg", "brainslugs", "1.0")
+    t_prefix = "node-ios-ota::applications::zoidberg::brainslugs::tags"
+    assert.equal at.tag_prefix(), "#{t_prefix}::1.0"
+
   it "should return the prefix for the taglist of an app" #, ->
     # user = new User({ name: "zoidberg" })
     # b_prefix = user.applications().get_app_build_prefix('blarph', 'branches')

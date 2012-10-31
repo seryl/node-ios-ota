@@ -1,7 +1,6 @@
 async = require 'async'
 
 RedisObject = require './redis_object'
-Application = require './application'
 
 ###*
  * A helper for working with branches for an application/user combo.
@@ -9,6 +8,7 @@ Application = require './application'
 class ApplicationBranch extends RedisObject
   constructor: (@user, @application, branch=null) ->
     super branch
+    @basename = "node-ios-ota::applications"
     @object_name = 'branches'
 
   ###*
@@ -16,15 +16,14 @@ class ApplicationBranch extends RedisObject
    * @return {String} The branchlist prefix for the current application
   ###
   branchlist_prefix: =>
-    app = new Application(@user)
-    return [app.applist_prefix(), @application, @object_name].join('::')
+    return [@basename, @user, @application, @object_name].join('::')
 
   ###*
    * Returns the prefix for a particular branch.
    * @return {String} The prefix for the given branch
   ###
-  branch_prefix: (branch) =>
-    return [@branchlist_prefix, branch].join('::')
+  branch_prefix: =>
+    return [@branchlist_prefix(), @current].join('::')
 
   list: =>
     branch_prefix = @get_app_build_prefix application, "branches"
@@ -37,8 +36,8 @@ class ApplicationBranch extends RedisObject
   ###
   save: (fn) =>
     branch_prefix = @get_app_build_prefix application, "branches"
-    @redis.sadd(branch_prefix, branch)
-    fn(null, true)
+    resp = @redis.sadd(branch_prefix, branch)
+    fn(null, resp)
 
   ###*
    * Deletes a single branch for the given application.
@@ -69,3 +68,5 @@ class ApplicationBranch extends RedisObject
   ###
   get_app_build_prefix: (application, dtype) =>
     return [@applist_prefix(), application, dtype].join('::')
+
+module.exports = ApplicationBranch

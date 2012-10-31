@@ -1,7 +1,16 @@
-User = require '../src/models/user'
 ApplicationBranch = require '../src/models/application_branch'
 
 describe 'ApplicationBranch', ->
+  it "should be able to generate a prefix for the branch list", ->
+    ab = new ApplicationBranch("zoidberg", "brainslugs", "master")
+    b_prefix = "node-ios-ota::applications::zoidberg::brainslugs::branches"
+    assert.equal ab.branchlist_prefix(), b_prefix
+
+  it "should be able to generate a prefix for a specific branch", ->
+    ab = new ApplicationBranch("zoidberg", "brainslugs", "master")
+    b_prefix = "node-ios-ota::applications::zoidberg::brainslugs::branches"
+    assert.equal ab.branch_prefix(), "#{b_prefix}::master"
+  
   it "should return prefixes for branches of an app" #, ->
     # user = new User({ name: "zoidberg" })
     # b_prefix = user.applications().get_app_build_prefix('blarph', 'branches')

@@ -120,8 +120,8 @@ class User extends RedisObject
     @current = { name: username.toLowerCase() }
     @redis.srem(@userlist_prefix(), username)
     @redis.del(@user_prefix(username))
-    # @applications
-    fn(null, true)
+    @applications().delete_all (err, reply) =>
+      if err then fn(null, false) else fn(null, true)
 
   ###*
    * Deletes every user that currently exists.

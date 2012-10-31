@@ -1,7 +1,6 @@
 async = require 'async'
 
 RedisObject = require './redis_object'
-Application = require './application'
 
 ###*
  * A helper for working with tags for an application/user combo.
@@ -9,6 +8,7 @@ Application = require './application'
 class ApplicationTag extends RedisObject
   constructor: (@user, @application, tag=null) ->
     super tag
+    @basename = "node-ios-ota::applications"
     @object_name = 'tags'
 
   ###*
@@ -16,15 +16,13 @@ class ApplicationTag extends RedisObject
    * @return {String} The taglist prefix for the current application
   ###
   taglist_prefix: =>
-    app = new Application(@user)
-    return [app.applist_prefix(), @application, @object_name].join('::')
+    return [@basename, @user, @application, @object_name].join('::')
 
   ###*
    * Returns the prefix for a particular tag.
-   * @return {String} The prefix for the given tag
   ###
-  tag_prefix: (tag) =>
-    return [@taglist_prefix(), tag].join('::')
+  tag_prefix: =>
+    return [@taglist_prefix(), @current].join('::')
 
   list: =>
     tags_prefix = @get_app_build_prefix application, "tags"
@@ -52,7 +50,7 @@ class ApplicationTag extends RedisObject
    * @param {Function} The callback function
   ###
   delete_all: (fn) =>
-    @tags application, (err, taglist) =>
+    @list (err, taglist) =>
       async.forEach(taglist, @delete_tag, fn)
 
   ###*
@@ -69,3 +67,5 @@ class ApplicationTag extends RedisObject
   ###
   get_app_build_prefix: (application, dtype) =>
     return [@applist_prefix(), application, dtype].join('::')
+
+module.exports = ApplicationTag

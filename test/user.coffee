@@ -2,13 +2,11 @@ User = require '../src/models/user'
 
 describe 'User', ->
   beforeEach (done) ->
-    user = new User()
-    user.delete_all ->
+    new User().delete_all ->
       done()
 
   after (done) ->
-    user = new User()
-    user.delete_all ->
+    new User().delete_all ->
       done()
 
   it "should have the object name `user`", ->
