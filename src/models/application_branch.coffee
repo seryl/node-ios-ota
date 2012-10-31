@@ -25,9 +25,8 @@ class ApplicationBranch extends RedisObject
   branch_prefix: =>
     return [@branchlist_prefix(), @current].join('::')
 
-  list: =>
-    branch_prefix = @get_app_build_prefix application, "branches"
-    return @redis.smembers(branch_prefix)
+  list: (fn) =>
+    return @redis.smembers(@branchlist_prefix(), fn)
 
   ###*
    * Inserts a new branch into the given application.
@@ -35,7 +34,6 @@ class ApplicationBranch extends RedisObject
    * @param {Function} (fn) The callback function
   ###
   save: (fn) =>
-    branch_prefix = @get_app_build_prefix application, "branches"
     resp = @redis.sadd(branch_prefix, branch)
     fn(null, resp)
 

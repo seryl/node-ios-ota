@@ -137,8 +137,7 @@ class User extends RedisObject
    * @param {Function} (fn) The callback function
   ###
   exists: (username, fn) =>
-    @redis.sismember @userlist_prefix(), username, (err, reply) =>
-      fn(err, reply)
+    @redis.sismember(@userlist_prefix(), username, fn)
 
   ###*
    * Checks the login for a given user

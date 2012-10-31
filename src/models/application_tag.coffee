@@ -20,12 +20,12 @@ class ApplicationTag extends RedisObject
 
   ###*
    * Returns the prefix for a particular tag.
+   * @return {String} The prefix for the given tag
   ###
   tag_prefix: =>
     return [@taglist_prefix(), @current].join('::')
 
-  list: =>
-    tags_prefix = @get_app_build_prefix application, "tags"
+  list: (fn) =>
     return @redis.smembers(tags_prefix, fn)
 
   ###*
