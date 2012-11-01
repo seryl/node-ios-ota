@@ -70,7 +70,6 @@ class User extends RedisObject
 
   ###*
    * Adds a new user object, merging and saving the current if it exists.
-   * @param {Object} (obj) The object to add
    * @param {Function} (fn) The callback function
   ###
   save: (update_secret=false, fn) =>

@@ -1,64 +1,58 @@
 User = require '../src/models/user'
 
 describe 'User', ->
+  user = new User()
+
   beforeEach (done) ->
-    new User().delete_all ->
+    user = new User()
+    user.delete_all ->
       done()
 
   afterEach (done) ->
-    new User().delete_all ->
+    user = new User()
+    user.delete_all ->
       done()
 
   it "should have the object name `user`", ->
-    user = new User()
     user.object_name.should.equal "user"
 
   it "should have a userlist_prefix of `node-ios-ota::users`", ->
-    user = new User()
     user.userlist_prefix().should.equal "node-ios-ota::users"
 
   it "should have a user_prefix of `node-ios-ota::user::<name>`", ->
-    user = new User()
     user.user_prefix("fry").should.equal "node-ios-ota::user::fry"
 
   it "should be able to delete a non-existing user", (done) ->
-    user = new User()
     user.delete "blargmat", (err, reply) ->
       assert.equal err, null
-      assert.equal reply, true
+      reply.should.equal true
       done()
 
   it "should be able to delete all users", (done) ->
-    user = new User()
     user.delete_all (err, reply) ->
       assert.equal err, null
       assert.equal reply, undefined
       done()
 
   it "should return an empty list of users when there are none", (done) ->
-    user = new User()
     user.list (err, reply) ->
       assert.equal err, null
-      assert.isArray reply
-      assert.equal reply.length, 0
+      assert.deepEqual reply, []
       done()
 
   it "should return (null, false) when adding an empty user", (done) ->
-    user = new User()
     user.save (err, reply) ->
       assert.equal err, null
-      assert.equal reply, false
+      reply.should.equal false
       done()
 
   it "should be able to add a user", (done) ->
-    user = new User()
     user.build({ name: "bender" }).save (err, reply) ->
       assert.equal err, null
-      assert.equal reply.name, "bender"
+      reply.name.should.equal "bender"
       done()
 
   it "should be able to remove a user from a set of users", (done) ->
-    user = new User()
     user.build({ name: "farnsworth" }).save (err, reply) ->
       assert.equal err, null
       assert.equal reply.name, "farnsworth"
@@ -70,11 +64,10 @@ describe 'User', ->
           assert.equal reply, true
           user.list (err, usernames) ->
             assert.equal err, null
-            assert.equal usernames[0], "zapp"
+            assert.deepEqual usernames, ["zapp"]
             done()
 
   it "should be able to check whether a user exists", (done) ->
-    user = new User()
     credentials = { username: "boxy", password: "uhmmuhum" }
     user.check_login credentials, (err, reply) ->
       assert.isNotNull(err)
@@ -82,29 +75,25 @@ describe 'User', ->
       done()
 
   it "should be able to check whether a login is incorrect", (done) ->
-    user = new User({ name: "kroker" })
-    user.save (err, reply) ->
+    user.build({ name: "kroker" }).save (err, reply) ->
       assert.equal err, null
-      assert.equal reply.name, "kroker"
+      reply.name.should.equal "kroker"
       credentials = { username: "kroker", password: "blghur" }
       user.check_login credentials, (err, reply) ->
         err.code.should.equal "InvalidPassword"
         done()
 
   it "should be able to check whether a login was successful", (done) ->
-    user = new User({ name: "nibbler" })
-    user.save (err, reply) ->
+    user.build({ name: "nibbler" }).save (err, reply) ->
       assert.equal err, null
-      assert.equal reply.name, "nibbler"
+      reply.name.should.equal "nibbler"
       credentials = { username: "nibbler", secret: reply.secret }
       user.check_login credentials, (err, reply) ->
         assert.equal err, null
         done()
 
   it "should be able to return the list of user applications", (done) ->
-    user = new User({ name: "Calculon" })
-    user.applications().list (err, reply) ->
+    user.build({ name: "Calculon" }).applications().list (err, reply) ->
       assert.equal err, null
-      assert.isArray reply
-      assert.equal reply.length, 0
+      assert.deepEqual reply, []
       done()

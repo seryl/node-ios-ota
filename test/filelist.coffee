@@ -2,14 +2,16 @@ User = require '../src/models/user'
 Filelist = require '../src/models/filelist'
 
 describe 'Filelist', ->
+  user = new User({ name: "zoidberg" })
+
   beforeEach (done) ->
-    new User().delete_all ->
-      user = new User({ name: "zoidberg" })
+    user = new User({ name: "zoidberg" })
+    user.delete_all ->
       user.save (err, username) ->
         done()
 
   afterEach (done) ->
-    new User().delete_all ->
+    user.delete_all ->
       done()
 
   it "should have the object name `filelist`", ->
@@ -40,7 +42,39 @@ describe 'Filelist', ->
     files_prefix = fl_prefix = "node-ios-ota::applications::#{app_suffix}"
     fl.files_prefix().should.equal files_prefix
 
-  it "should be able to add a file to the filelist"
+  it "should return an empty list for a filelist that is empty", (done) ->
+    user.save (err, reply) =>
+      app = user.applications().build('brainslugs');
+      app.save (err, reply) =>
+        assert.equal err, null
+        branch = app.branches().build('master')
+        branch.save (err, reply) ->
+          assert.equal err, null
+          files = branch.files()
+          files.list (err, reply) ->
+            assert.equal err, null
+            assert.deepEqual reply, []
+            done()
+
+  # it "should be able to add a file to the filelist", (done) ->
+  #   add_files = [
+  #     { name: "myapp.ipa",   md5: "54e05c292ef585094a12b20818b3f952" },
+  #     { name: "myapp.plist", md5: "ab1e5d1ed4be9d7cb8376cbf12f85ca8" }
+  #   ]
+  #   user = new User({ name: "zoidberg" })
+  #   user.save (err, reply) =>
+  #     app = user.applications().build('brainslugs')
+  #     app.save (err, reply) =>
+  #       assert.equal err, null
+  #       branch = app.branches().build('master')
+  #       branch.save (err, reply) =>
+  #         assert.equal err, null
+  #         files = branch.files()
+  #         files.save add_files, (err, reply) =>
+  #           console.log "Adding files..."
+  #           console.log err
+  #           console.log reply
+  #           done()
 
   it "should be able to add md5sums for a file"
 

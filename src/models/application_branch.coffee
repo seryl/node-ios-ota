@@ -1,6 +1,7 @@
 async = require 'async'
 
 RedisObject = require './redis_object'
+Filelist = require './filelist'
 
 ###*
  * A helper for working with branches for an application/user combo.
@@ -25,6 +26,10 @@ class ApplicationBranch extends RedisObject
   branch_prefix: =>
     return [@branchlist_prefix(), @current].join('::')
 
+  ###*
+   * Returns the list of branches for the given user/application.
+   * @param {Function} (fn) The callback function
+  ###
   list: (fn) =>
     return @redis.smembers(@branchlist_prefix(), fn)
 
@@ -47,7 +52,7 @@ class ApplicationBranch extends RedisObject
   delete: (branch, fn) =>
     @current = branch
     @redis.srem(@branchlist_prefix(), branch)
-    fn(null, true)
+    fn(null)
 
   ###*
    * Deletes the branches for a given application.
@@ -58,10 +63,10 @@ class ApplicationBranch extends RedisObject
       async.forEach(branchlist, @delete, fn)
 
   ###*
-   * Returns the branch information and file hashes for the given app/branch.
-   * @param {String} (application) The name of the application to retrieve
-   * @param {String} (branch) The name of the branch to retrieve
+   * Returns the list of files for the current branch.
+   * @return {Object} The Filelist object for the current branch
   ###
-  info: (application, branch) =>
+  files: =>
+    return new Filelist(@user, @application, @object_name, @current)
 
 module.exports = ApplicationBranch

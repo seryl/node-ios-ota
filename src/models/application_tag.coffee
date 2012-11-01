@@ -1,6 +1,7 @@
 async = require 'async'
 
 RedisObject = require './redis_object'
+Filelist = require './filelist'
 
 ###*
  * A helper for working with tags for an application/user combo.
@@ -25,6 +26,10 @@ class ApplicationTag extends RedisObject
   tag_prefix: =>
     return [@taglist_prefix(), @current].join('::')
 
+  ###*
+   * Returns the list of tags for the given user/application.
+   * @param {Function} (fn) The callback function
+  ###
   list: (fn) =>
     return @redis.smembers(@taglist_prefix(), fn)
 
@@ -47,7 +52,7 @@ class ApplicationTag extends RedisObject
   delete: (tag, fn) =>
     @current = tag
     @redis.srem(@taglist_prefix(), tag)
-    fn(null, true)
+    fn(null)
 
   ###*
    * Deletes all of the tags for the current application.
@@ -58,10 +63,10 @@ class ApplicationTag extends RedisObject
       async.forEach(taglist, @delete, fn)
 
   ###*
-   * Returns the tag information and file hashes for the given app/branch.
-   * @param {String} (application) The name of the application to retrieve
-   * @param {String} (tag) The name of the tag to retrieve
+   * Returns the list of files for the current tag.
+   * @return {Object} The Filelist object for the current application
   ###
-  info: (application, tag) =>
+  files: =>
+    return new Filelist(@user, @application, @object_name)
 
 module.exports = ApplicationTag

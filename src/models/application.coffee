@@ -73,6 +73,7 @@ class Application extends RedisObject
         stat_add = @redis.sadd(@applist_prefix(), target)
         status = if (stat_add) then null else
           message: "Error saving application: `#{target}`."
+        @current = target
         fn(status, target)
 
   ###*
@@ -85,7 +86,7 @@ class Application extends RedisObject
     @redis.srem(@applist_prefix(), application)
     @branches().delete_all (err, reply) =>
       @tags().delete_all (err, reply) =>
-        fn(null, true)
+        fn(null)
   ###*
    * Deletes every application for the user that currently exists.
    * @param {Function} (fn) The callback function
