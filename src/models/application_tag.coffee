@@ -26,7 +26,7 @@ class ApplicationTag extends RedisObject
     return [@taglist_prefix(), @current].join('::')
 
   list: (fn) =>
-    return @redis.smembers(@tag_prefix(), fn)
+    return @redis.smembers(@taglist_prefix(), fn)
 
   ###*
    * Inserts a new tag into the given application.
@@ -34,7 +34,7 @@ class ApplicationTag extends RedisObject
    * @param {Function} (fn) The callback function
   ###
   save: (fn) =>
-    stat_add = @redis.sadd(@tag_prefix(), @current)
+    stat_add = @redis.sadd(@taglist_prefix(), @current)
     status = if (stat_add) then null else
       message: "Error saving tag: `#{@user}/#{@application}/#{@current}`."
     fn(status, @current)
@@ -55,7 +55,7 @@ class ApplicationTag extends RedisObject
   ###
   delete_all: (fn) =>
     @list (err, taglist) =>
-      async.forEach(taglist, @delete_tag, fn)
+      async.forEach(taglist, @delete, fn)
 
   ###*
    * Returns the tag information and file hashes for the given app/branch.
