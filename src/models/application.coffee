@@ -48,6 +48,7 @@ class Application extends RedisObject
    * Searches for the redis objects that match the query.
    * @param {Object} (name) The name of the application to search for
    * @param {Function} (fn) The callback function
+   TODO: Finish this function
   ###
   find: (name, admin=false, fn) =>
     if typeof admin == "function" then fn = admin
@@ -68,21 +69,11 @@ class Application extends RedisObject
     return fn(null, false) unless @current
     target = @current
     @all { name: true }, (err, applications) =>
-      stat_add = @redis.sadd(@applist_prefix(), target)
-      fn(null, stat_add)
-
-  ###*
-   * Saves the given application object for the current user
-  ###
-  save_app: (obj, fn) =>
-    obj.secret or= generate_identity()
-    stat_add = @redis.sadd(@userlist_prefix(), obj.name)
-    stat_hm = @redis.hmset(@user_prefix(obj.name), obj)
-
-    status = if (stat_add and stat_hm) then null else
-        message: "Error saving user: `#{obj.name}`."
-    @current = obj
-    fn(status, @current)
+      if target in applications then return fn(null, @current) else
+        stat_add = @redis.sadd(@applist_prefix(), target)
+        status = if (stat_add) then null else
+          message: "Error saving application: `#{target}`."
+        fn(status, target)
 
   ###*
    * Deletes a redis object that matches the query.
@@ -90,10 +81,11 @@ class Application extends RedisObject
    * @param {Function} (fn) the callback function
   ###
   delete: (application, fn) =>
-    @current = { name: application.toLowerCase() }
+    @current = application
     @redis.srem(@applist_prefix(), application)
-    fn(null, true)
-
+    @branches().delete_all (err, reply) =>
+      @tags().delete_all (err, reply) =>
+        fn(null, true)
   ###*
    * Deletes every application for the user that currently exists.
    * @param {Function} (fn) The callback function
@@ -107,13 +99,13 @@ class Application extends RedisObject
    * @return {Object} The ApplicationBranch object for the current application
   ###
   branches: =>
-    return new ApplicationBranch(@current.name)
+    return new ApplicationBranch(@user, @current)
 
   ###*
    * Returns the list of tags for the current application.
    * @return {Object} The ApplicationTag object for the current application
   ###
   tags: =>
-    return new ApplicationTag(@current.name)
+    return new ApplicationTag(@user, @current)
 
 module.exports = Application

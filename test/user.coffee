@@ -5,7 +5,7 @@ describe 'User', ->
     new User().delete_all ->
       done()
 
-  after (done) ->
+  afterEach (done) ->
     new User().delete_all ->
       done()
 

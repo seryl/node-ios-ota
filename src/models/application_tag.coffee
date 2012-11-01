@@ -26,7 +26,7 @@ class ApplicationTag extends RedisObject
     return [@taglist_prefix(), @current].join('::')
 
   list: (fn) =>
-    return @redis.smembers(tags_prefix, fn)
+    return @redis.smembers(@tag_prefix(), fn)
 
   ###*
    * Inserts a new tag into the given application.
@@ -34,9 +34,10 @@ class ApplicationTag extends RedisObject
    * @param {Function} (fn) The callback function
   ###
   save: (fn) =>
-    tags_prefix = @get_app_build_prefix application, "tags"
-    resp = @redis.sadd(tags_prefix, tag)
-    fn(null, resp)
+    stat_add = @redis.sadd(@tag_prefix(), @current)
+    status = if (stat_add) then null else
+      message: "Error saving tag: `#{@user}/#{@application}/#{@current}`."
+    fn(status, @current)
 
   ###*
    * Deletes a single tag for the given application.
@@ -44,6 +45,9 @@ class ApplicationTag extends RedisObject
    * @param {Function} The callback function
   ###
   delete: (tag, fn) =>
+    @current = tag
+    @redis.srem(@taglist_prefix(), tag)
+    fn(null, true)
 
   ###*
    * Deletes all of the tags for the current application.
@@ -59,13 +63,5 @@ class ApplicationTag extends RedisObject
    * @param {String} (tag) The name of the tag to retrieve
   ###
   info: (application, tag) =>
-
-  ###*
-   * Returns the application build info for either a branch or tag.
-   * @param {String} (application) The name of the application to retrieve
-   * @param {String} (dtype) The data type to get `branches` or `tags`
-  ###
-  get_app_build_prefix: (application, dtype) =>
-    return [@applist_prefix(), application, dtype].join('::')
 
 module.exports = ApplicationTag

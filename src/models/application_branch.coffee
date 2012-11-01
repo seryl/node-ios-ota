@@ -34,8 +34,10 @@ class ApplicationBranch extends RedisObject
    * @param {Function} (fn) The callback function
   ###
   save: (fn) =>
-    resp = @redis.sadd(branch_prefix, branch)
-    fn(null, resp)
+    stat_add = @redis.sadd(@branchlist_prefix(), @current)
+    status = if (stat_add) then null else
+      message: "Error saving branch: `#{@user}/#{@application}/#{@current}`."
+    fn(status, @current)
 
   ###*
    * Deletes a single branch for the given application.
@@ -43,6 +45,9 @@ class ApplicationBranch extends RedisObject
    * @param {Function} (fn) The callback function
   ###
   delete: (branch, fn) =>
+    @current = branch
+    @redis.srem(@branchlist_prefix(), branch)
+    fn(null, true)
 
   ###*
    * Deletes the branches for a given application.
@@ -58,13 +63,5 @@ class ApplicationBranch extends RedisObject
    * @param {String} (branch) The name of the branch to retrieve
   ###
   info: (application, branch) =>
-
-  ###*
-   * Returns the application build info for either a branch or tag.
-   * @param {String} (application) The name of the application to retrieve
-   * @param {String} (dtype) The data type to get `branches` or `tags`
-  ###
-  get_app_build_prefix: (application, dtype) =>
-    return [@applist_prefix(), application, dtype].join('::')
 
 module.exports = ApplicationBranch
