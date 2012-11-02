@@ -56,25 +56,21 @@ describe 'Filelist', ->
             assert.deepEqual reply, []
             done()
 
-  # it "should be able to add a file to the filelist", (done) ->
-  #   add_files = [
-  #     { name: "myapp.ipa",   md5: "54e05c292ef585094a12b20818b3f952" },
-  #     { name: "myapp.plist", md5: "ab1e5d1ed4be9d7cb8376cbf12f85ca8" }
-  #   ]
-  #   user = new User({ name: "zoidberg" })
-  #   user.save (err, reply) =>
-  #     app = user.applications().build('brainslugs')
-  #     app.save (err, reply) =>
-  #       assert.equal err, null
-  #       branch = app.branches().build('master')
-  #       branch.save (err, reply) =>
-  #         assert.equal err, null
-  #         files = branch.files()
-  #         files.save add_files, (err, reply) =>
-  #           console.log "Adding files..."
-  #           console.log err
-  #           console.log reply
-  #           done()
+  it "should be able to add a file to the filelist" #, (done) ->
+    # add_files = [
+    #   { name: "myapp.ipa",   md5: "54e05c292ef585094a12b20818b3f952" },
+    #   { name: "myapp.plist", md5: "ab1e5d1ed4be9d7cb8376cbf12f85ca8" }
+    # ]
+    # user.save (err, reply) =>
+    #   app = user.applications().build('brainslugs')
+    #   app.save (err, reply) =>
+    #     assert.equal err, null
+    #     branch = app.branches().build('master')
+    #     branch.save (err, reply) =>
+    #       assert.equal err, null
+    #       files = branch.files()
+    #       files.save add_files, (err, reply) =>
+    #         done()
 
   it "should be able to add md5sums for a file"
 

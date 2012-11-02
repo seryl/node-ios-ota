@@ -67,6 +67,6 @@ class ApplicationTag extends RedisObject
    * @return {Object} The Filelist object for the current application
   ###
   files: =>
-    return new Filelist(@user, @application, @object_name)
+    return new Filelist(@user, @application, @object_name, @current)
 
 module.exports = ApplicationTag

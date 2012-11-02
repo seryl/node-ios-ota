@@ -61,16 +61,30 @@ class Filelist extends RedisObject
    *
   ###
   save: (files, fn) =>
-    filemap = flatten([f.name, f.md5] for f in files)
-    filemap.unshift(@filelist_prefix())
+    # async.forEach files, update_obj, (err) =>
+    #   @redis.hmset @filelist_prefix(), 'files', JSON.stringify(file_obj)
+    #   @redis.hgetall @filelist_prefix(), (err, reply) ->
+    #     console.log err
+    #     console.log reply
+    #   fn(null, true)
+    # file_obj
+    # filemap = (f.name for f in files)
+    # filemap.unshift(@filelist_prefix())
+    filemap = flatten(f.name for f in files)
+    console.log filemap
 
-    @redis.hmset.apply(this, filemap)
+    # @redis.hmset @filelist_prefix(), 'files', filemap
+    fn(null, true)
+
+    # filemap.unshift(@filelist_prefix())
+
+    # @redis.hmset.apply(this, filemap)
 
     # @redis.hgetall(@filelist_prefix(), (err, reply) =>
     #   console.log err
     #   console.log reply)
-    console.log filemap
-    fn(null, true)
+    # console.log filemap
+    # fn(null, true)
     # @redis.hmset()
     # @redis.hmset()
     # async.forEach files, @add_file, (err) =>
