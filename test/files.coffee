@@ -147,5 +147,4 @@ describe 'Files', ->
               assert.deepEqual reply, ['myapp.ipa', 'myapp.plist']
               files.save updated_file, (err, reply) =>
                 assert.equal err, null
-                console.log reply
                 done()
