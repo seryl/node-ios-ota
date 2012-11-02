@@ -93,5 +93,7 @@ describe 'Application', ->
         user.applications().build('silly_dog').save (err, reply) ->
           user.applications().list (err, reply) ->
             assert.equal err, null
-            assert.deepEqual reply, ['silly_duck', 'silly_dog']
+            assert.equal reply.length, 2
+            assert.equal ('silly_dog' in reply), true
+            assert.equal ('silly_duck' in reply), true
             done()

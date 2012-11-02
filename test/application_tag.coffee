@@ -25,11 +25,6 @@ describe 'ApplicationTag', ->
     tlist_prefix = "node-ios-ota::applications::zoidberg::brainslugs::tags"
     at.taglist_prefix().should.equal tlist_prefix
 
-  it "should be able to generate a prefix for a specific tag", ->
-    at = new ApplicationTag("zoidberg", "brainslugs", "1.0")
-    t_prefix = "node-ios-ota::applications::zoidberg::brainslugs::tags"
-    at.tag_prefix().should.equal "#{t_prefix}::1.0"
-
   it "should return an empty list of tags when there are none", (done) ->
     user.save (err, reply) =>
       user.applications().build('brainslugs').save (err, reply) =>

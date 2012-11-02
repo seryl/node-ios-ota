@@ -25,11 +25,6 @@ describe 'ApplicationBranch', ->
     b_prefix = "node-ios-ota::applications::zoidberg::brainslugs::branches"
     ab.branchlist_prefix().should.equal b_prefix
 
-  it "should be able to generate a prefix for a specific branch", ->
-    ab = new ApplicationBranch("zoidberg", "brainslugs", "master")
-    b_prefix = "node-ios-ota::applications::zoidberg::brainslugs::branches"
-    ab.branch_prefix().should.equal "#{b_prefix}::master"
-
   it "should return an empty list of branches when there are none", (done) ->
     user.save (err, reply) =>
       app = user.applications().build('brainslugs')
