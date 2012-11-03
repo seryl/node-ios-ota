@@ -18,7 +18,7 @@ class Logger extends Singleton
       ]
     @logger.log = () ->
       args = arguments
-      winston.Logger.prototype.log.apply(this, args)
+      winston.Logger.prototype.log.apply(@, args)
     return @logger
 
 module.exports = Logger
