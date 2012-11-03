@@ -3,15 +3,6 @@ async = require 'async'
 RedisObject = require './redis_object'
 
 ###*
- * Flattens an array into a single dimension.
- * @param {Array} (a) The array to flatten
- * @return {Array} The flattened array
-###
-flatten = (a) ->
-  if a.length is 0 then return []
-  a.reduce (lhs, rhs) -> lhs.concat rhs
-
-###*
  * A helper for working with files for a branch or tag of an application.
 ###
 class Files extends RedisObject
@@ -34,6 +25,29 @@ class Files extends RedisObject
   ###
   list: (fn) =>
     @redis.hkeys @files_prefix(), (err, reply) =>
+      fn(err, reply)
+
+  ###*
+   * Returns the full information hash all of the current files.
+   * @param {Function} (fn) The callback function
+  ###
+  all: (fn) =>
+    @redis.hgetall @files_prefix(), (err, reply) =>
+      if reply
+        new_reply = []
+        for key in Object.keys(reply)
+          new_reply.push { name: key, md5: reply[key] }
+      fn(err, new_reply)
+
+  ###*
+   * Finds and returns the information hash for a particular file.
+   * @param {String} (filename) The filename to find information about
+   * @param {Function} (fn) The callback function
+  ###
+  find: (filename, fn) =>
+    @redis.hget @files_prefix(), filename, (err, reply) =>
+      if reply
+        reply = { name: filename, md5: reply }
       fn(err, reply)
 
   ###*
@@ -64,14 +78,15 @@ class Files extends RedisObject
   ###*
    * Deletes a single file from the files hashmap.
    * @param {String} (filename) The filename to delete
-   * @param {Function} The callback function
+   * @param {Function} (fn) The callback function
   ###
   delete: (filename, fn) =>
     @redis.del @files_prefix(), filename (err, reply) =>
       fn(null)
 
   ###*
-   * Deletes all of the associated files from the
+   * Deletes all of the associated files from the current tag/branch.
+   * @param {Function} (fn) The callback function
   ###
   delete_all: (fn) =>
     @redis.hkeys @files_prefix(), (err, reply) =>
@@ -79,6 +94,5 @@ class Files extends RedisObject
         reply.unshift @files_prefix()
         @redis.hdel.apply(@redis, reply)
       fn(null)
-
 
 module.exports = Files

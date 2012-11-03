@@ -27,6 +27,21 @@ class ApplicationTag extends RedisObject
     return @redis.smembers(@taglist_prefix(), fn)
 
   ###*
+   * Returns the information for the current application tag.
+   * @param {String} (name) The name of the tag to retrieve
+   * @param {Function} (fn) The callback function
+   * TODO: Finish this
+  ###
+  find: (name, fn) =>
+
+  ###*
+   * Returns the information for all the current application tags.
+   * @param {Function} (fn) The callback function
+   * TODO: Finish this
+  ###
+  all: (fn) =>
+
+  ###*
    * Inserts a new tag into the given application.
    * @param {String} (branch) The name of the branch to add
    * @param {Function} (fn) The callback function

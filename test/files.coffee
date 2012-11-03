@@ -147,4 +147,28 @@ describe 'Files', ->
               assert.deepEqual reply, ['myapp.ipa', 'myapp.plist']
               files.save updated_file, (err, reply) =>
                 assert.equal err, null
-                done()
+                files.find 'myapp.ipa', (err, reply) =>
+                  assert.equal err, null
+                  assert.deepEqual reply, updated_file
+                  done()
+
+  it "should be able to list all the md5sums for all files", (done) ->
+    add_files = [
+      { name: "myapp.ipa",   md5: "54e05c292ef585094a12b20818b3f952" },
+      { name: "myapp.plist", md5: "ab1e5d1ed4be9d7cb8376cbf12f85ca8" }
+    ]
+
+    user.save (err, reply) =>
+      assert.equal err, null
+      app = user.applications().build('brainslugs')
+      app.save (err, reply) =>
+        assert.equal err, null
+        branch = app.branches().build('master')
+        branch.save (err, reply) =>
+          assert.equal err, null
+          files = branch.files()
+          files.save add_files, (err, reply) =>
+            files.all (err, reply) =>
+              assert.equal err, null
+              assert.deepEqual reply, add_files
+              done()
