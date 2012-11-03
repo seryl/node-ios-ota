@@ -9,7 +9,6 @@ describe 'User', ->
       done()
 
   afterEach (done) ->
-    user = new User()
     user.delete_all ->
       done()
 
