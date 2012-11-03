@@ -7,6 +7,11 @@ describe 'Files', ->
   branch = null
   tag = null
 
+  add_files = [
+    { name: "myapp.ipa",   md5: "54e05c292ef585094a12b20818b3f952" },
+    { name: "myapp.plist", md5: "ab1e5d1ed4be9d7cb8376cbf12f85ca8" }
+  ]
+
   beforeEach (done) ->
     user = new User({ name: "zoidberg" })
     user.delete_all ->
@@ -58,10 +63,6 @@ describe 'Files', ->
       done()
 
   it "should be able to add a file to the files", (done) ->
-    add_files = [
-      { name: "myapp.ipa",   md5: "54e05c292ef585094a12b20818b3f952" },
-      { name: "myapp.plist", md5: "ab1e5d1ed4be9d7cb8376cbf12f85ca8" }
-    ]
     files = branch.files()
     files.save add_files, (err, reply) =>
       files.list (err, reply) =>
@@ -70,10 +71,6 @@ describe 'Files', ->
         done()
 
   it "should be able to remove a file from the files and hash", (done) ->
-    add_files = [
-      { name: "myapp.ipa",   md5: "54e05c292ef585094a12b20818b3f952" },
-      { name: "myapp.plist", md5: "ab1e5d1ed4be9d7cb8376cbf12f85ca8" }
-    ]
     files = branch.files()
     files.save add_files, (err, reply) =>
       files.list (err, reply) =>
@@ -82,10 +79,6 @@ describe 'Files', ->
         done()
 
   it "should be able to remove all files from the files", (done) ->
-    add_files = [
-      { name: "myapp.ipa",   md5: "54e05c292ef585094a12b20818b3f952" },
-      { name: "myapp.plist", md5: "ab1e5d1ed4be9d7cb8376cbf12f85ca8" }
-    ]
     files = branch.files()
     files.save add_files, (err, reply) =>
       files.list (err, reply) =>
@@ -99,31 +92,20 @@ describe 'Files', ->
             done()
 
   it "should be able to update the md5sum for a file", (done) ->
-    add_files = [
-      { name: "myapp.ipa",   md5: "54e05c292ef585094a12b20818b3f952" },
-      { name: "myapp.plist", md5: "ab1e5d1ed4be9d7cb8376cbf12f85ca8" }
-    ]
-    updated_file =
-      name: "myapp.ipa"
-      md5:  "33b42f456cd70aea284ef49d2c4a8652"
-
+    updated = { name: "myapp.ipa", md5:  "33b42f456cd70aea284ef49d2c4a8652" }
     files = branch.files()
     files.save add_files, (err, reply) =>
       files.list (err, reply) =>
         assert.equal err, null
         assert.deepEqual reply, ['myapp.ipa', 'myapp.plist']
-        files.save updated_file, (err, reply) =>
+        files.save updated, (err, reply) =>
           assert.equal err, null
           files.find 'myapp.ipa', (err, reply) =>
             assert.equal err, null
-            assert.deepEqual reply, updated_file
+            assert.deepEqual reply, updated
             done()
 
   it "should be able to list all the md5sums for all files", (done) ->
-    add_files = [
-      { name: "myapp.ipa",   md5: "54e05c292ef585094a12b20818b3f952" },
-      { name: "myapp.plist", md5: "ab1e5d1ed4be9d7cb8376cbf12f85ca8" }
-    ]
     files = branch.files()
     files.save add_files, (err, reply) =>
       files.all (err, reply) =>
