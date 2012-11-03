@@ -45,8 +45,7 @@ describe 'Files', ->
     fl_prefix = "node-ios-ota::applications::#{app_suffix}"
     tag.files().files_prefix().should.equal fl_prefix
 
-  it "should be able
-  to generate a prefix for the (branches) files hash", ->
+  it "should be able to generate a prefix for the (branches) files hash", ->
     app_suffix = "zoidberg::brainslugs::branches::master::files"
     files_prefix = fl_prefix = "node-ios-ota::applications::#{app_suffix}"
     branch.files().files_prefix().should.equal files_prefix
@@ -67,7 +66,7 @@ describe 'Files', ->
     files.save add_files, (err, reply) =>
       files.list (err, reply) =>
         assert.equal err, null
-        assert.deepEqual reply, ['myapp.ipa', 'myapp.plist']
+        assert.deepEqual reply, (f.name for f in add_files)
         done()
 
   it "should be able to remove a file from the files and hash", (done) ->
@@ -75,7 +74,7 @@ describe 'Files', ->
     files.save add_files, (err, reply) =>
       files.list (err, reply) =>
         assert.equal err, null
-        assert.deepEqual reply, ['myapp.ipa', 'myapp.plist']
+        assert.deepEqual reply, (f.name for f in add_files)
         done()
 
   it "should be able to remove all files from the files", (done) ->
@@ -83,7 +82,7 @@ describe 'Files', ->
     files.save add_files, (err, reply) =>
       files.list (err, reply) =>
         assert.equal err, null
-        assert.deepEqual reply, ['myapp.ipa', 'myapp.plist']
+        assert.deepEqual reply, (f.name for f in add_files)
         files.delete_all (err) =>
           assert.equal err, null
           files.list (err, reply) =>
@@ -97,7 +96,7 @@ describe 'Files', ->
     files.save add_files, (err, reply) =>
       files.list (err, reply) =>
         assert.equal err, null
-        assert.deepEqual reply, ['myapp.ipa', 'myapp.plist']
+        assert.deepEqual reply, (f.name for f in add_files)
         files.save updated, (err, reply) =>
           assert.equal err, null
           files.find 'myapp.ipa', (err, reply) =>
