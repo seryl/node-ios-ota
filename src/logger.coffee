@@ -17,8 +17,7 @@ class Logger extends Singleton
           timestamp: true
       ]
     @logger.log = () ->
-      args = arguments
-      winston.Logger.prototype.log.apply(@, args)
+      winston.Logger.prototype.log.apply(@, arguments)
     return @logger
 
 module.exports = Logger
