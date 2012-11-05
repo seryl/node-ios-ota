@@ -67,8 +67,19 @@ describe 'WebServer', ->
         assert.deepEqual data.applications, ['example_app']
         done()
 
-  # it "should allow deletion of a user for the admin", (done) ->
-  #   client.get '/test_user', (err, req, res, data) ->
-  #     assert.ifError err
-  #     console.log data
-  #     done()
+  it "should allow deletion of a user for the admin", (done) ->
+    client.get '/users', (err, req, res, data) ->
+      assert.ifError err
+      assert.deepEqual data, { users: ['silly_user', 'test_user'] }
+      client.del '/users/test_user', (err, req, res, data) ->
+        assert.ifError err
+        client.get '/users', (err, req, res, data) ->
+          assert.ifError err
+          assert.deepEqual data, { users: ['silly_user'] }
+
+          client.del '/users/silly_user', (err, req, res, data) ->
+            assert.ifError err
+            client.get '/users', (err, req, res, data) ->
+              assert.ifError err
+              assert.deepEqual data, { users: [] }
+              done()
