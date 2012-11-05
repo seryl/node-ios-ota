@@ -33,6 +33,13 @@ class ApplicationTag extends RedisObject
    * TODO: Finish this
   ###
   find: (name, fn) =>
+    original = @current
+    @current = name
+    response = {}
+    @files().all (err, reply) =>
+      unless (reply instanceof Array)
+        reply = Array(reply)
+      response["files"] = reply
 
   ###*
    * Returns the information for all the current application tags.

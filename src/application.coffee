@@ -8,7 +8,7 @@ WebServer = require './webserver'
  * The base application class.
 ###
 class Application
-  constructor: () ->
+  constructor: ->
     @config = Config.get()
     @logger = Logger.get()
     @cli = new CLI()
