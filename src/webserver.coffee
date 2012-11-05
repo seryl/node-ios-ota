@@ -86,8 +86,7 @@ class WebServer
 
         user = new User({ name: req.params.user })
         user.save (err, reply) =>
-          res.json 200
-            message: reply
+          res.json 200, reply
           return next()
 
       @authenticate_with_self_admin(req, handle_auth_response, user)
@@ -151,9 +150,11 @@ class WebServer
 
     # Creates a new application for a user.
     @app.put '/:user/:app', (req, res, next) =>
-      res.json 200
-        message: "Successfully updated application `#{req.params.app}`."
-      return next()
+      user = new User({ name: req.params.user })
+      user.applications().build(req.params.app).save (err, reply) =>
+        res.json 200
+          message: "Successfully updated application `#{req.params.app}`."
+        return next()
 
     # Returns the list of applications for a specific user.
     @app.get '/:user/:app', (req, res, next) =>
