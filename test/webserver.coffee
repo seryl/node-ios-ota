@@ -71,6 +71,7 @@ describe 'WebServer', ->
     client.get '/users', (err, req, res, data) ->
       assert.ifError err
       assert.deepEqual data, { users: ['silly_user', 'test_user'] }
+      
       client.del '/users/test_user', (err, req, res, data) ->
         assert.ifError err
         client.get '/users', (err, req, res, data) ->
