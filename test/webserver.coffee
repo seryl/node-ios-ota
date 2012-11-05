@@ -67,7 +67,7 @@ describe 'WebServer', ->
         assert.deepEqual data.applications, ['example_app']
         done()
 
-  it "should allow deletion of a user for the admin", (done) ->
+  it "should allow deletion of a user for the admin /:user", (done) ->
     client.get '/users', (err, req, res, data) ->
       assert.ifError err
       assert.deepEqual data, { users: ['silly_user', 'test_user'] }
