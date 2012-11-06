@@ -41,7 +41,6 @@ class ApplicationTag extends RedisObject
   ###*
    * Returns the information for all the current application tags.
    * @param {Function} (fn) The callback function
-   * TODO: Finish this
   ###
   all: (fn) =>
     @list (err, tags) =>
