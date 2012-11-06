@@ -30,16 +30,13 @@ class ApplicationTag extends RedisObject
    * Returns the information for the current application tag.
    * @param {String} (name) The name of the tag to retrieve
    * @param {Function} (fn) The callback function
-   * TODO: Finish this
   ###
   find: (name, fn) =>
     original = @current
     @current = name
-    response = {}
     @files().all (err, reply) =>
-      unless (reply instanceof Array)
-        reply = Array(reply)
-      response["files"] = reply
+      @current = original
+      fn(err, {name: @current, files: reply} )
 
   ###*
    * Returns the information for all the current application tags.

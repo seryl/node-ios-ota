@@ -30,9 +30,13 @@ class ApplicationBranch extends RedisObject
    * Returns the information for the current application branch.
    * @param {String} (name) The name of the branch to retrieve
    * @param {Function} (fn) The callback function
-   * TODO: Finish this
   ###
   find: (name, fn) =>
+    original = @current
+    @current = name
+    @files().all (err, reply) =>
+      @current = original
+      fn(err, {name: @current, files: reply} )
 
   ###*
    * Returns the information for all the current application branches.
@@ -40,6 +44,11 @@ class ApplicationBranch extends RedisObject
    * TODO: Finish this
   ###
   all: (fn) =>
+    # @list (err, reply) =>
+    #   if reply
+    #     new_reply = []
+    #   for key in Object.keys(reply)
+    #     new_reply.push { name: key, files: @find(key)}
 
   ###*
    * Inserts a new branch into the given application.

@@ -81,17 +81,18 @@ describe 'WebServer', ->
       assert.deepEqual data.branches, []
       done()
 
-  it "should show info for a tag"
+  it "should be able to add/update a tag"
+
+  it "should be able to add/update a branch"
+
+  it "should show info for a tag" #, (done) ->
+    # client.get '/test_user/example_app/tags/1.0'
 
   it "should show info for a branch"
 
   it "should be able to update the tag list"
 
   it "should be able to update the branch list"
-
-  it "should be able to update a tag"
-
-  it "should be able to update a branch"
 
   it "should be able to delete a tag"
 

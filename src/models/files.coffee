@@ -37,6 +37,8 @@ class Files extends RedisObject
         new_reply = []
         for key in Object.keys(reply)
           new_reply.push { name: key, md5: reply[key] }
+      else
+        new_reply = []
       fn(err, new_reply)
 
   ###*

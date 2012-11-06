@@ -200,6 +200,24 @@ class WebServer
           tags: reply
         return next()
 
+    # Shows the tag info for a specified user/application/tag
+    @app.get '/:user/:app/tags/:tag', (req, res, next) =>
+      user = new User({ name: req.params.user })
+      app = user.applications().build(req.params.app)
+      tag = app.tags().build(req.params.tag)
+      tag.find req.params.tag, (err, reply) =>
+        res.json 200, reply
+        return next()
+
+    # Shows the branch info for a specified user/application/branch
+    @app.get '/:user/:app/branches/:branch', (req, res, next) =>
+      user = new User({ name: req.params.user })
+      app = user.applications().build(req.params.app)
+      branch = app.branches().build(req.params.branch)
+      branch.find req.params.branch, (err, reply) =>
+        res.json 200, reply
+        return next()
+
     # Posts new files to a specified user/application.
     @app.post '/:user/:app/branches', (req, res) ->
       location = [req.params.user, req.params.app, 'branches']
