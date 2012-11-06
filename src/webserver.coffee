@@ -236,6 +236,22 @@ class WebServer
         res.json 200, reply
         return next()
 
+    # Deletes a tag
+    @app.del '/:user/:app/tags/:tag', (req, res, next) =>
+      user = new User({ name: req.params.user })
+      app = user.applications().build(req.params.app)
+      app.tags().delete req.params.tag, (err, reply) =>
+        res.json 200, message: "successfully deleted `#{req.params.tag}`."
+        return next()
+
+    # Deletes a branch
+    @app.del '/:user/:app/branches/:branch', (req, res, next) =>
+      user = new User({ name: req.params.user })
+      app = user.applications().build(req.params.app)
+      app.branches().delete 'master', (err, reply) =>
+      res.json 200, message: "successfully deleted `#{req.params.branch}`."
+      return next()
+
     # # Posts new files to a specified user/application.
     # @app.post '/:user/:app/branches', (req, res) ->
     #   location = [req.params.user, req.params.app, 'branches']

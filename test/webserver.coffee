@@ -120,9 +120,41 @@ describe 'WebServer', ->
 
   it "should be able to update the branch list"
 
-  it "should be able to delete a tag"
+  it "should be able to delete a tag", (done) ->
+    client.post '/test_user/example_app/tags/1.0',
+    {files: add_files}, (err, req, res, data) ->
+      assert.ifError err
+      data.name.should.equal "1.0"
+      client.get '/test_user/example_app/tags',
+      (err, req, res, data) ->
+        assert.ifError err
+        data.tags[0].should.equal "1.0"
+        client.del '/test_user/example_app/tags/1.0',
+        (err, req, res, data) ->
+          assert.ifError err
+          client.get '/test_user/example_app/tags',
+          (err, req, res, data) ->
+            assert.ifError err
+            assert.deepEqual data.tags, []
+            done()
 
-  it "should be able to delete a branch"
+  it "should be able to delete a branch", (done) ->
+    client.post '/test_user/example_app/branches/master',
+    {files: add_files}, (err, req, res, data) ->
+      assert.ifError err
+      data.name.should.equal "master"
+      client.get '/test_user/example_app/branches',
+      (err, req, res, data) ->
+        assert.ifError err
+        data.branches[0].should.equal "master"
+        client.del '/test_user/example_app/branches/master',
+        (err, req, res, data) ->
+          assert.ifError err
+          client.get '/test_user/example_app/branches',
+          (err, req, res, data) ->
+            assert.ifError err
+            assert.deepEqual data.branches, []
+            done()
 
   it "should be able to synchronize files for a tag"
 
