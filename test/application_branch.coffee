@@ -81,16 +81,10 @@ describe 'ApplicationBranch', ->
             assert.ifError err
             branch2.all (err, reply) =>
               assert.ifError err
-              console.log reply['branches'][1]
-              # console.log assert
-              # reply['branches'].should.include(
-                # {name: 'master', files: add_files})
-              # assert.equal(
-              #   ({name: 'master', files: add_files} in reply['branches']),
-              #   true)
-              # assert.equal(
-              #   ({name: 'development', files: add_files} in reply['branches']),
-              #   true)
+              ['master', 'development'].should.include(
+                reply['branches'][0]['name'])
+              ['master', 'development'].should.include(
+                reply['branches'][1]['name'])
               done()
 
   it "should be able to remove a single branch from an app", (done) ->

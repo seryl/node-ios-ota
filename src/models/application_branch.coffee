@@ -36,7 +36,7 @@ class ApplicationBranch extends RedisObject
     @current = name
     @files().all (err, reply) =>
       @current = original
-      fn(err, {name: @current, files: reply} )
+      fn(err, {name: name, files: reply} )
 
   ###*
    * Returns the information for all the current application branches.

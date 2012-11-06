@@ -36,7 +36,7 @@ class ApplicationTag extends RedisObject
     @current = name
     @files().all (err, reply) =>
       @current = original
-      fn(err, {name: name, files: reply} )
+      fn(err, {name: name, files: reply})
 
   ###*
    * Returns the information for all the current application tags.
