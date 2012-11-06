@@ -44,11 +44,9 @@ class ApplicationBranch extends RedisObject
    * TODO: Finish this
   ###
   all: (fn) =>
-    # @list (err, reply) =>
-    #   if reply
-    #     new_reply = []
-    #   for key in Object.keys(reply)
-    #     new_reply.push { name: key, files: @find(key)}
+    @list (err, branches) =>
+      async.map branches, @find, (err, results) =>
+        fn(err, {branches: results})
 
   ###*
    * Inserts a new branch into the given application.

@@ -54,7 +54,7 @@ describe 'ApplicationTag', ->
         done()
 
   it "should be able to show added files for a single tag", (done) ->
-    tag = app.branches().build('1.0')
+    tag = app.tags().build('1.0')
     tag.save (err, reply) =>
       assert.ifError err
       files = tag.files()
@@ -65,6 +65,27 @@ describe 'ApplicationTag', ->
           reply.name.should.equal "1.0"
           assert.deepEqual reply.files, add_files
           done()
+
+  it "should be able to show added files for all tags", (done) ->
+    tag1 = app.tags().build('1.0')
+    tag1.save (err, reply) =>
+      assert.ifError err
+      files1 = tag1.files()
+      files1.save add_files, (err, reply) =>
+        assert.ifError err
+        tag2 = app.tags().build('1.1')
+        tag2.save (err, reply) =>
+          assert.ifError err
+          files2 = tag2.files()
+          files2.save add_files, (err, reply) =>
+            assert.ifError err
+            tag2.all (err, reply) =>
+              assert.ifError err
+              assert.deepEqual reply['tags'][0],
+                {name: '1.1', files: add_files}
+              assert.deepEqual reply['tags'][1],
+                {name: '1.0', files: add_files}
+              done()
 
   it "should be able to remove a single tag from an app", (done) ->
     tags1 = app.tags().build('sillytag')
@@ -83,7 +104,7 @@ describe 'ApplicationTag', ->
     tags1 = app.tags().build('sillytag')
     tags1.save (err, reply) =>
       assert.ifError err
-      tags2 = app.branches().build('thefunk')
+      tags2 = app.tags().build('thefunk')
       tags2.save (err, reply) =>
         assert.ifError err
         tags2.delete_all (err, reply) =>

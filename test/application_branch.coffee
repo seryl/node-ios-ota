@@ -66,6 +66,27 @@ describe 'ApplicationBranch', ->
           assert.deepEqual reply.files, add_files
           done()
 
+  it "should be able to show added files for all branches", (done) ->
+    branch1 = app.branches().build('master')
+    branch1.save (err, reply) =>
+      assert.ifError err
+      files1 = branch1.files()
+      files1.save add_files, (err, reply) =>
+        assert.ifError err
+        branch2 = app.branches().build('development')
+        branch2.save (err, reply) =>
+          assert.ifError err
+          files2 = branch2.files()
+          files2.save add_files, (err, reply) =>
+            assert.ifError err
+            branch2.all (err, reply) =>
+              assert.ifError err
+              assert.deepEqual reply['branches'][0],
+                {name: 'development', files: add_files}
+              assert.deepEqual reply['branches'][1],
+                {name: 'master', files: add_files}
+              done()
+
   it "should be able to remove a single branch from an app", (done) ->
     app.branches().build('sillybranch').save (err, reply) =>
       assert.ifError err

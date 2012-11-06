@@ -36,7 +36,7 @@ class ApplicationTag extends RedisObject
     @current = name
     @files().all (err, reply) =>
       @current = original
-      fn(err, {name: @current, files: reply} )
+      fn(err, {name: name, files: reply} )
 
   ###*
    * Returns the information for all the current application tags.
@@ -44,6 +44,9 @@ class ApplicationTag extends RedisObject
    * TODO: Finish this
   ###
   all: (fn) =>
+    @list (err, tags) =>
+      async.map tags, @find, (err, results) =>
+        fn(err, {tags: results})
 
   ###*
    * Inserts a new tag into the given application.
