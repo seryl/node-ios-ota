@@ -200,6 +200,24 @@ class WebServer
           tags: reply
         return next()
 
+    # Creates a new tag
+    @app.post '/:user/:app/tags/:tag', (req, res, next) =>
+      user = new User({ name: req.params.user })
+      app = user.applications().build(req.params.app)
+      tag = app.tags().build(req.params.tag)
+      tag.save (err, reply) =>
+        res.json 200, name: reply
+        return next()
+
+    # Creates a new branch
+    @app.post '/:user/:app/branches/:branch', (req, res, next) =>
+      user = new User({ name: req.params.user })
+      app = user.applications().build(req.params.app)
+      branch = app.branches().build(req.params.branch)
+      branch.save (err, reply) =>
+        res.json 200, name: reply
+        return next()
+
     # Shows the tag info for a specified user/application/tag
     @app.get '/:user/:app/tags/:tag', (req, res, next) =>
       user = new User({ name: req.params.user })
@@ -218,27 +236,27 @@ class WebServer
         res.json 200, reply
         return next()
 
-    # Posts new files to a specified user/application.
-    @app.post '/:user/:app/branches', (req, res) ->
-      location = [req.params.user, req.params.app, 'branches']
-      form = formidable.IncomingForm()
-      form.parse req, (err, fields, files) ->
-        res.json 200,
-          message: "Recieved Upload",
-          fields: fields,
-          files: files
-        return next()
+    # # Posts new files to a specified user/application.
+    # @app.post '/:user/:app/branches', (req, res) ->
+    #   location = [req.params.user, req.params.app, 'branches']
+    #   form = formidable.IncomingForm()
+    #   form.parse req, (err, fields, files) ->
+    #     res.json 200,
+    #       message: "Recieved Upload",
+    #       fields: fields,
+    #       files: files
+    #     return next()
 
-    # Posts new tags to a specified user/application.
-    @app.post '/:user/:app/tags', (req, res) ->
-      location = [req.params.user, req.params.app, 'tags']
-      form = formidable.IncomingForm()
-      form.parse req, (err, fields, files) ->
-        res.json 200,
-          message: "Recieved Upload",
-          fields: fields,
-          files: files
-        return next()
+    # # Posts new tags to a specified user/application.
+    # @app.post '/:user/:app/tags', (req, res) ->
+    #   location = [req.params.user, req.params.app, 'tags']
+    #   form = formidable.IncomingForm()
+    #   form.parse req, (err, fields, files) ->
+    #     res.json 200,
+    #       message: "Recieved Upload",
+    #       fields: fields,
+    #       files: files
+    #     return next()
 
   ###*
    * Authenticates the user.

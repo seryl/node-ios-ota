@@ -17,6 +17,11 @@ describe 'WebServer', ->
     username: "admin"
     secret: "admin"
 
+  add_files = [
+    { name: "myapp.ipa",   md5: "54e05c292ef585094a12b20818b3f952" },
+    { name: "myapp.plist", md5: "ab1e5d1ed4be9d7cb8376cbf12f85ca8" }
+  ]
+
   beforeEach (done) ->
     logger.clear()
     ws = new WebServer(8080)
@@ -81,14 +86,35 @@ describe 'WebServer', ->
       assert.deepEqual data.branches, []
       done()
 
-  it "should be able to add/update a tag"
+  it "should be able to add/update a tag", (done) ->
+    client.post '/test_user/example_app/tags/1.0',
+    {files: add_files}, (err, req, res, data) ->
+      assert.ifError err
+      data.name.should.equal "1.0"
+      done()
 
-  it "should be able to add/update a branch"
+  it "should be able to add/update a branch", (done) ->
+    client.post '/test_user/example_app/branches/master',
+    {files: add_files}, (err, req, res, data) ->
+      assert.ifError err
+      data.name.should.equal "master"
+      done()
 
-  it "should show info for a tag" #, (done) ->
-    # client.get '/test_user/example_app/tags/1.0'
+  it "should show info for a tag", (done) ->
+    client.get '/test_user/example_app/tags/1.0',
+    (err, req, res, data) ->
+      assert.ifError err
+      data.name.should.equal "1.0"
+      assert.deepEqual data.files, []
+      done()
 
-  it "should show info for a branch"
+  it "should show info for a branch", (done) ->
+    client.get '/test_user/example_app/branches/master',
+    (err, req, res, data) ->
+      assert.ifError err
+      data.name.should.equal "master"
+      assert.deepEqual data.files, []
+      done()
 
   it "should be able to update the tag list"
 
