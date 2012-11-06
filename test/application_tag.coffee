@@ -32,9 +32,9 @@ describe 'ApplicationTag', ->
       done()
 
   it "should be able to add a single tag to an app", (done) ->
-    at = app.tags().build('1.0')
-    at.save (err, reply) =>
-      at.list (err, reply) =>
+    tags = app.tags().build('1.0')
+    tags.save (err, reply) =>
+      tags.list (err, reply) =>
         assert.equal err, null
         assert.deepEqual reply, ["1.0"]
         done()

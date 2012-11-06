@@ -14,9 +14,9 @@ describe 'ApplicationBranch', ->
           done()
 
   afterEach (done) ->
-      user.delete_all ->
-        app = null
-        done()
+    user.delete_all ->
+      app = null
+      done()
 
   it "should have the object name `branches`", ->
     app.branches().object_name.should.equal "branches"
@@ -27,9 +27,9 @@ describe 'ApplicationBranch', ->
 
   it "should return an empty list of branches when there are none", (done) ->
     app.branches().build('master').list (err, reply) =>
-          assert.equal err, null
-          assert.deepEqual reply, []
-          done()
+      assert.equal err, null
+      assert.deepEqual reply, []
+      done()
 
   it "should be able to add a single branch to an app", (done) ->
     branch = app.branches().build('master')

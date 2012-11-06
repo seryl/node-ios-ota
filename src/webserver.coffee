@@ -177,21 +177,28 @@ class WebServer
       location = [req.params.user, req.params.app, 'branches']
       loc = location.join('/')
       location.unshift(@config.get('repository'))
-      fs.readdir location.join('/'),
-        (err, reply) =>
-          console.log(err)
-          console.log(reply)
-          res.json 200,
-            message: "branches"
-          return next()
+      user = new User({ name: req.params.user })
+      app = user.applications().build(req.params.app)
+      branches = app.branches()
+      branches.list (err, reply) =>
+        res.json 200,
+          name: loc
+          branches: reply
+        return next()
 
     # Lists all of the tags for a specified user/application.
-    @app.get '/:user/:app/tags', (req, res) =>
+    @app.get '/:user/:app/tags', (req, res, next) =>
       location = [req.params.user, req.params.app, 'tags']
-      res.json 200,
-        name: [req.params.user, req.params.app, 'tags'].join('/'),
-        tags: []
-      return next()
+      loc = location.join('/')
+      location.unshift(@config.get('repository'))
+      user = new User({ name: req.params.user })
+      app = user.applications().build(req.params.app)
+      tags = app.tags()
+      tags.list (err, reply) =>
+        res.json 200,
+          name: loc
+          tags: reply
+        return next()
 
     # Posts new files to a specified user/application.
     @app.post '/:user/:app/branches', (req, res) ->

@@ -67,9 +67,19 @@ describe 'WebServer', ->
         assert.deepEqual data.applications, ['example_app']
         done()
 
-  it "should list all the tags for an app"
+  it "should list all the tags for an app", (done) ->
+    client.get '/test_user/example_app/tags', (err, req, res, data) ->
+      assert.ifError err
+      data.name.should.equal "test_user/example_app/tags"
+      assert.deepEqual data.tags, []
+      done()
 
-  it "should list all the branches for an app"
+  it "should list all the branches for an app", (done) ->
+    client.get '/test_user/example_app/branches', (err, req, res, data) ->
+      assert.ifError err
+      data.name.should.equal "test_user/example_app/branches"
+      assert.deepEqual data.branches, []
+      done()
 
   it "should show info for a tag"
 
