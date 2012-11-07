@@ -116,10 +116,6 @@ describe 'WebServer', ->
       assert.deepEqual data.files, []
       done()
 
-  it "should be able to update the tag list"
-
-  it "should be able to update the branch list"
-
   it "should be able to delete a tag", (done) ->
     client.post '/test_user/example_app/tags/1.0',
     {files: add_files}, (err, req, res, data) ->
@@ -156,6 +152,7 @@ describe 'WebServer', ->
             assert.deepEqual data.branches, []
             done()
 
+  # Not quite sure how to run these two tests yet.
   it "should be able to synchronize files for a tag"
 
   it "should be able to synchronize files for a branch"

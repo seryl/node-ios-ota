@@ -1,12 +1,16 @@
 fs = require 'fs'
 restify = require 'restify'
-formidable = require 'formidable'
+crypto = require 'crypto'
 require('pkginfo')(module, 'name', 'version')
 
 Config = require './config'
 Logger = require './logger'
 {Identity, generate_identity} = require './identity'
 User = require './models/user'
+
+file_md5 = (filepath, cb) ->
+  fs.readFile filepath, 'utf8', (err, data) ->
+    cb(err, crypto.createHash('md5').update(data).digest('hex'))
 
 ###*
  * The iOS-ota webserver command line interface class.
@@ -200,21 +204,25 @@ class WebServer
           tags: reply
         return next()
 
-    # Creates a new tag
+    # Creates or  a new tag
     @app.post '/:user/:app/tags/:tag', (req, res, next) =>
       user = new User({ name: req.params.user })
       app = user.applications().build(req.params.app)
       tag = app.tags().build(req.params.tag)
       tag.save (err, reply) =>
+        # TODO: Check whether or we need to update the files.
+        # console.log req.params.files
         res.json 200, name: reply
         return next()
 
-    # Creates a new branch
+    # Creates or updates a branch re-updating files if they are passed.
     @app.post '/:user/:app/branches/:branch', (req, res, next) =>
       user = new User({ name: req.params.user })
       app = user.applications().build(req.params.app)
       branch = app.branches().build(req.params.branch)
       branch.save (err, reply) =>
+        # TODO: Check whether or we need to update the files.
+        # console.log req.params.files
         res.json 200, name: reply
         return next()
 
@@ -251,28 +259,6 @@ class WebServer
       app.branches().delete 'master', (err, reply) =>
       res.json 200, message: "successfully deleted `#{req.params.branch}`."
       return next()
-
-    # # Posts new files to a specified user/application.
-    # @app.post '/:user/:app/branches', (req, res) ->
-    #   location = [req.params.user, req.params.app, 'branches']
-    #   form = formidable.IncomingForm()
-    #   form.parse req, (err, fields, files) ->
-    #     res.json 200,
-    #       message: "Recieved Upload",
-    #       fields: fields,
-    #       files: files
-    #     return next()
-
-    # # Posts new tags to a specified user/application.
-    # @app.post '/:user/:app/tags', (req, res) ->
-    #   location = [req.params.user, req.params.app, 'tags']
-    #   form = formidable.IncomingForm()
-    #   form.parse req, (err, fields, files) ->
-    #     res.json 200,
-    #       message: "Recieved Upload",
-    #       fields: fields,
-    #       files: files
-    #     return next()
 
   ###*
    * Authenticates the user.
