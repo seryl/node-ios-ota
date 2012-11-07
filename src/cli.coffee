@@ -59,7 +59,7 @@ class CLI
 
     @configure()
 
-    if @config.get('help').toString() is "true"
+    if @config.get('help') and @config.get('help').toString() is "true"
       optimist.showHelp()
       process.exit(0)
 

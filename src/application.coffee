@@ -13,7 +13,7 @@ class Application
     @logger = Logger.get()
     @cli = new CLI()
     @identity = Identity.get()
-    @ws = new WebServer(@config.get('port'))
+    @ws = new WebServer()
 
   ###*
    * Aborts the application with a message.

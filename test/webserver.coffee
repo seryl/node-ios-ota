@@ -1,16 +1,14 @@
 restify = require 'restify'
 
 Logger = require '../src/logger'
-CLI = require '../src/cli'
 WebServer = require '../src/webserver'
 
 describe 'WebServer', ->
   ws = null
-  cli = new CLI()
   logger = Logger.get()
 
   client = restify.createJsonClient
-    url: 'http://127.0.0.1:8080'
+    url: "http://127.0.0.1:#{config.get('port')}"
     version: '*'
 
   admin_creds =
@@ -24,7 +22,7 @@ describe 'WebServer', ->
 
   beforeEach (done) ->
     logger.clear()
-    ws = new WebServer(8080)
+    ws = new WebServer(config.get('port'))
     done()
 
   afterEach (done) ->
@@ -50,7 +48,7 @@ describe 'WebServer', ->
       assert.ifError err
       client.get '/users', (err, req, res, data) ->
         assert.ifError err
-        assert.deepEqual data, { users: ['silly_user', 'test_user'] }
+        assert.deepEqual data, { users: ['test_user', 'silly_user'] }
         done()
 
   it "should be able to get information for a user", (done) ->
@@ -160,7 +158,7 @@ describe 'WebServer', ->
   it "should allow deletion of a user for the admin", (done) ->
     client.get '/users', (err, req, res, data) ->
       assert.ifError err
-      assert.deepEqual data, { users: ['silly_user', 'test_user'] }
+      assert.deepEqual data, { users: ['test_user', 'silly_user'] }
 
       client.del '/users/test_user', (err, req, res, data) ->
         assert.ifError err

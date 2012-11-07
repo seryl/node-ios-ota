@@ -1,5 +1,6 @@
 RedisSingleton = require './redis_singleton'
 Config = require '../config'
+Logger = require '../logger'
 
 ###*
  * Acts as a base class for all Redis-based objects.
@@ -11,6 +12,7 @@ class RedisObject
     @object_name = "redis-object"
     @redis = RedisSingleton.get()
     @config = Config.get()
+    @logger = Logger.get()
     @current = obj
 
   ###*

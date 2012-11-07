@@ -13,7 +13,7 @@ describe 'Application', ->
         apps = user.applications()
         done()
 
-  afterEach (done) ->
+  after (done) ->
     user.delete_all ->
       apps = null
       done()
@@ -36,6 +36,23 @@ describe 'Application', ->
       assert.deepEqual reply, []
       done()
 
+  it "should return (null, false) when adding an unnamed app", (done) ->
+      apps.save (err, reply) ->
+        assert.equal err, null
+        assert.equal reply, false
+        done()
+
+  it "should be able to add new applications for a given user", (done) ->
+      apps.build('mooorrrooroo').save (err, reply) ->
+        apps.list (err, reply) ->
+          assert.equal err, null
+          assert.deepEqual reply, ["mooorrrooroo"]
+          fs.exists [
+            config.get('repository'), "zoidberg", "mooorrrooroo"].join('/'),
+            (exists) ->
+              exists.should.equal true
+              done()
+
   it "should be able to delete a single application for a user", (done) ->
     apps.build('brainslugs').save (err, reply) =>
       apps.build('crushinator').save (err, reply) =>
@@ -43,10 +60,14 @@ describe 'Application', ->
           assert.equal err, null
           assert.deepEqual reply, ["crushinator", "brainslugs"]
           apps.delete "brainslugs", (err, reply) =>
-            apps.list (err, reply) =>
-              assert.equal err, null
-              assert.deepEqual reply, ["crushinator"]
-              done()
+            fs.exists [
+              config.get('repository'), "crushinator", "brainslugs"].join('/'),
+              (exists) ->
+                exists.should.equal false
+                apps.list (err, reply) =>
+                  assert.equal err, null
+                  assert.deepEqual reply, ["crushinator"]
+                  done()
 
   it "should be able to delete all applications for a given user", (done) ->
     apps.build('brainslugs').save (err, reply) =>
@@ -61,19 +82,6 @@ describe 'Application', ->
               assert.equal err, null
               assert.deepEqual reply, []
               done()
-
-  it "should return (null, false) when adding an unnamed app", (done) ->
-      apps.save (err, reply) ->
-        assert.equal err, null
-        assert.equal reply, false
-        done()
-
-  it "should be able to add new applications for a given user", (done) ->
-      apps.build('mooorrrooroo').save (err, reply) ->
-        apps.list (err, reply) ->
-          assert.equal err, null
-          assert.deepEqual reply, ["mooorrrooroo"]
-          done()
 
   it "should be able to list the applications for a given user", (done) ->
     apps.build('silly_duck').save (err, reply) ->

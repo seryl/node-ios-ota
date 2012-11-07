@@ -1,10 +1,11 @@
 fs = require 'fs'
 merge = require 'merge-recursive'
 async = require 'async'
+mkdirp = require 'mkdirp'
 
 RedisObject = require './redis_object'
-{generate_identity} = require '../identity'
 Application = require './application'
+{generate_identity} = require '../identity'
 
 ###*
  * A helper for representing a particular user and their applications.
@@ -107,8 +108,9 @@ class User extends RedisObject
 
     status = if (stat_add and stat_hm) then null else
         message: "Error saving user: `#{obj.name}`."
-    @current = obj
-    return fn(status, @current)
+    @setup_directories obj.name, (err, made) =>
+      @current = obj
+      return fn(status, @current)
 
   ###*
    * Deletes a redis object that matches the query.
@@ -120,7 +122,8 @@ class User extends RedisObject
     @redis.srem(@userlist_prefix(), username)
     @redis.del(@user_prefix(username))
     @applications().delete_all (err, reply) =>
-      if err then fn(true, false) else fn(null, true)
+      @delete_directories username, (err, succ) =>
+        if err then fn(true, false) else fn(null, true)
 
   ###*
    * Deletes every user that currently exists.
@@ -161,13 +164,26 @@ class User extends RedisObject
     true)
 
   ###*
-   * Creates the directories for a user application.
-   * @param {Object} (user) The username to create directories for
+   * Creates the directories for a user.
+   * @param {Object} (username) The username to create directories for
    * @param {Function} (fn) The callback function
   ###
-  setup_directories: (user, fn) =>
-    fs.mkdir [@config.get('repository'), user.username].join('/'), () =>
-      # Check applications and build a directory for each
+  setup_directories: (username, fn) =>
+    mkdirp [@config.get('repository'), username].join('/'), (err, made) =>
+      if err
+        @logger.error "Error setting up directories for `#{username}`."
+      fn(err, made)
+
+  ###*
+   * Deletes the directories for a user.
+   * @param {Object} (username) The username to delete directories of
+   * @param {Function} (fn) The callback function
+  ###
+  delete_directories: (username, fn) =>
+    fs.rmdir [@config.get('repository'), username].join('/'), (err) =>
+      if err
+        @logger.error "Error removing directories for `#{username}`."
+      fn(null, true)
 
   ###*
    * Returns the applications object for the current user.

@@ -18,7 +18,7 @@ describe 'ApplicationTag', ->
         app.save (err, reply) ->
           done()
 
-  afterEach (done) ->
+  after (done) ->
     user.delete_all ->
       app = null
       done()

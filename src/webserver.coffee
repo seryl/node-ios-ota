@@ -1,6 +1,5 @@
 fs = require 'fs'
 restify = require 'restify'
-crypto = require 'crypto'
 require('pkginfo')(module, 'name', 'version')
 
 Config = require './config'
@@ -8,15 +7,11 @@ Logger = require './logger'
 {Identity, generate_identity} = require './identity'
 User = require './models/user'
 
-file_md5 = (filepath, cb) ->
-  fs.readFile filepath, 'utf8', (err, data) ->
-    cb(err, crypto.createHash('md5').update(data).digest('hex'))
-
 ###*
  * The iOS-ota webserver command line interface class.
 ###
 class WebServer
-  constructor: (@port=8080) ->
+  constructor: ->
     @config = Config.get()
     @logger = Logger.get()
     @identity = Identity.get()
@@ -24,8 +19,8 @@ class WebServer
     @app.use(restify.authorizationParser());
     @app.use(restify.bodyParser({ mapParams: true }))
     @setup_routing()
-    @app.listen(@port)
-    @logger.info "Webserver is up at: http://0.0.0.0:#{@port}"
+    @app.listen(@config.get('port'))
+    @logger.info "Webserver is up at: http://0.0.0.0:#{@config.get('port')}"
 
   # Sets up the webserver routing.
   setup_routing: =>

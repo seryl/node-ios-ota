@@ -1,3 +1,4 @@
+fs = require 'fs'
 async = require 'async'
 
 RedisObject = require './redis_object'
@@ -73,8 +74,10 @@ class Application extends RedisObject
         stat_add = @redis.sadd(@applist_prefix(), target)
         status = if (stat_add) then null else
           message: "Error saving application: `#{target}`."
-        @current = target
-        fn(status, target)
+        unless status
+          @setup_directories target, (err, reply) =>
+            @current = target
+            fn(status, target)
 
   ###*
    * Deletes a redis object that matches the query.
@@ -86,7 +89,8 @@ class Application extends RedisObject
     @redis.srem(@applist_prefix(), application)
     @branches().delete_all (err, reply) =>
       @tags().delete_all (err, reply) =>
-        fn(null)
+        @delete_directories application, (err, reply) =>
+          fn(null)
   ###*
    * Deletes every application for the user that currently exists.
    * @param {Function} (fn) The callback function
@@ -108,5 +112,29 @@ class Application extends RedisObject
   ###
   tags: =>
     return new ApplicationTag(@user, @current)
+
+  ###*
+   * Creates the directories for the application.
+   * @param {Object} (application) The application to create directories for
+   * @param {Function} (fn) The callback function
+  ###
+  setup_directories: (application, fn) =>
+    dirloc = [@user, application].join('/')
+    fs.mkdir [@config.get('repository'), dirloc].join('/'), (err, made) =>
+      if err
+        @logger.error "Error setting up directories for `#{dirloc}`."
+      fn(err, made)
+
+  ###*
+   * Deletes the directories for the application.
+   * @param {Object} (application) The application to create directories for
+   * @param {Function} (fn) The callback function
+  ###
+  delete_directories: (application, fn) =>
+    dirloc = [@user, application].join('/')
+    fs.rmdir [@config.get('repository'), dirloc].join('/'), (err) =>
+      if err
+        @logger.error "Error removing directories for `#{dirloc}`."
+      fn(null, true)
 
 module.exports = Application

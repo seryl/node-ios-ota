@@ -8,7 +8,7 @@ describe 'User', ->
     user.delete_all ->
       done()
 
-  afterEach (done) ->
+  after (done) ->
     user.delete_all ->
       done()
 
@@ -41,30 +41,36 @@ describe 'User', ->
 
   it "should return (null, false) when adding an empty user", (done) ->
     user.save (err, reply) ->
-      assert.equal err, null
+      assert.ifError err
       reply.should.equal false
       done()
 
   it "should be able to add a user", (done) ->
     user.build({ name: "bender" }).save (err, reply) ->
-      assert.equal err, null
+      assert.ifError err
       reply.name.should.equal "bender"
-      done()
+      fs.exists [
+        config.get('repository'), "bender"].join('/'), (exists) ->
+          exists.should.equal true
+          done()
 
   it "should be able to remove a user from a set of users", (done) ->
     user.build({ name: "farnsworth" }).save (err, reply) ->
-      assert.equal err, null
+      assert.ifError err
       assert.equal reply.name, "farnsworth"
       user.build({ name: "zapp" }).save (err, reply) ->
-        assert.equal err, null
+        assert.ifError err
         assert.equal reply.name, "zapp"
         user.delete "farnsworth", (err, reply) ->
-          assert.equal err, null
+          assert.ifError err
           assert.equal reply, true
-          user.list (err, usernames) ->
-            assert.equal err, null
-            assert.deepEqual usernames, ["zapp"]
-            done()
+          fs.exists [
+            config.get('repository'), "farnsworth"].join('/'), (exists) ->
+              exists.should.equal false
+              user.list (err, usernames) ->
+                assert.ifError err
+                assert.deepEqual usernames, ["zapp"]
+                done()
 
   it "should be able to check whether a user exists", (done) ->
     credentials = { username: "boxy", password: "uhmmuhum" }
@@ -75,7 +81,7 @@ describe 'User', ->
 
   it "should be able to check whether a login is incorrect", (done) ->
     user.build({ name: "kroker" }).save (err, reply) ->
-      assert.equal err, null
+      assert.ifError err
       reply.name.should.equal "kroker"
       credentials = { username: "kroker", password: "blghur" }
       user.check_login credentials, (err, reply) ->
@@ -84,11 +90,11 @@ describe 'User', ->
 
   it "should be able to check whether a login was successful", (done) ->
     user.build({ name: "nibbler" }).save (err, reply) ->
-      assert.equal err, null
+      assert.ifError err
       reply.name.should.equal "nibbler"
       credentials = { username: "nibbler", secret: reply.secret }
       user.check_login credentials, (err, reply) ->
-        assert.equal err, null
+        assert.ifError err
         done()
 
   it "should be able to return the list of user applications", (done) ->

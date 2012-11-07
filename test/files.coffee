@@ -24,7 +24,7 @@ describe 'Files', ->
             tag.save (err, reply) ->
               done()
 
-  afterEach (done) ->
+  after (done) ->
     user.delete_all ->
       app = null
       branch = null
