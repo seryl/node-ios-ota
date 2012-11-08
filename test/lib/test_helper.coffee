@@ -1,4 +1,5 @@
 path = require 'path'
+os = require 'os'
 
 global.fs = require 'fs'
 global.rimraf = require 'rimraf'
@@ -16,5 +17,5 @@ global.config = Config.get()
 
 config.overrides({
   'port': 8080,
-  'repository': path.normalize("/tmp/node-ios-ota")
+  'repository': path.normalize("#{os.tmpDir()}/tmp/node-ios-ota")
 })

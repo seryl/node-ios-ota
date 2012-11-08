@@ -206,7 +206,7 @@ class WebServer
       tag = app.tags().build(req.params.tag)
       tag.save (err, reply) =>
         # TODO: Check whether or we need to update the files.
-        # console.log req.params.files
+        console.log req.params.files
         res.json 200, name: reply
         return next()
 
@@ -217,7 +217,7 @@ class WebServer
       branch = app.branches().build(req.params.branch)
       branch.save (err, reply) =>
         # TODO: Check whether or we need to update the files.
-        # console.log req.params.files
+        console.log req.params.files
         res.json 200, name: reply
         return next()
 
