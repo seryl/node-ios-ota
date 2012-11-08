@@ -5,6 +5,14 @@ describe 'Application', ->
   user = new User({ name: "zoidberg" })
   apps = null
 
+  before (done) ->
+    fs.exists config.get('repository'), (exists) ->
+      if exists
+        done()
+      else
+        fs.mkdir config.get('repository'), (err) ->
+          done()
+
   beforeEach (done) ->
     user = new User({ name: "zoidberg" })
     user.delete_all ->
@@ -16,7 +24,8 @@ describe 'Application', ->
   after (done) ->
     user.delete_all ->
       apps = null
-      done()
+      rimraf config.get('repository'), (err) ->
+        done()
 
   it "should have the object name `application`", ->
     apps.object_name.should.equal "application"

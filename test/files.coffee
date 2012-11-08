@@ -12,6 +12,14 @@ describe 'Files', ->
     { name: "myapp.plist", md5: "ab1e5d1ed4be9d7cb8376cbf12f85ca8" }
   ]
 
+  before (done) ->
+    fs.exists config.get('repository'), (exists) ->
+      if exists
+        done()
+      else
+        fs.mkdir config.get('repository'), (err) ->
+          done()
+
   beforeEach (done) ->
     user = new User({ name: "zoidberg" })
     user.delete_all ->
@@ -29,7 +37,8 @@ describe 'Files', ->
       app = null
       branch = null
       tag = null
-      done()
+      rimraf config.get('repository'), (err) ->
+        done()
 
   it "should have the object name `files`", ->
     tag.files().object_name.should.equal "files"

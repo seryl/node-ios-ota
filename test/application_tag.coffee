@@ -12,6 +12,14 @@ describe 'ApplicationTag', ->
     md5: "f1a8c3b91286aa1971a18b61e68b9ea8" }
   ]
 
+  before (done) ->
+    fs.exists config.get('repository'), (exists) ->
+      if exists
+        done()
+      else
+        fs.mkdir config.get('repository'), (err) ->
+          done()
+
   beforeEach (done) ->
     user = new User({ name: "zoidberg" })
     user.delete_all ->
@@ -23,7 +31,8 @@ describe 'ApplicationTag', ->
   after (done) ->
     user.delete_all ->
       app = null
-      done()
+      rimraf config.get('repository'), (err) ->
+        done()
 
   it "should have the object name `tags`", ->
     app.tags().object_name.should.equal "tags"
