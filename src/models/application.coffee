@@ -74,10 +74,9 @@ class Application extends RedisObject
         stat_add = @redis.sadd(@applist_prefix(), target)
         status = if (stat_add) then null else
           message: "Error saving application: `#{target}`."
-        unless status
-          @setup_directories target, (err, reply) =>
-            @current = target
-            fn(status, target)
+        @setup_directories target, (err, reply) =>
+          @current = target
+          fn(status, target)
 
   ###*
    * Deletes a redis object that matches the query.
@@ -120,10 +119,21 @@ class Application extends RedisObject
   ###
   setup_directories: (application, fn) =>
     dirloc = [@user, application].join('/')
-    fs.mkdir [@config.get('repository'), dirloc].join('/'), (err, made) =>
+    fulldir = [@config.get('repository'), dirloc].join('/')
+    msg = "Error setting up directories for"
+
+    fs.mkdir fulldir, (err, made) =>
       if err
-        @logger.error "Error setting up directories for `#{dirloc}`."
-      fn(err, made)
+        @logger.error "#{msg} `#{dirloc}`."
+
+      fs.mkdir [fulldir, "tags"].join('/'), (err, made) =>
+        if err
+          @logger.error "#{msg} `#{dirloc}/tags`."
+
+        fs.mkdir [fulldir, "branches"].join('/'), (err, made) =>
+          if err
+            @logger.error "#{msg} `#{dirloc}/branches`."
+          fn(err, made)
 
   ###*
    * Deletes the directories for the application.
@@ -132,9 +142,20 @@ class Application extends RedisObject
   ###
   delete_directories: (application, fn) =>
     dirloc = [@user, application].join('/')
-    fs.rmdir [@config.get('repository'), dirloc].join('/'), (err) =>
+    fulldir = [@config.get('repository'), dirloc].join('/')
+    msg = "Error removing directories for"
+
+    fs.rmdir fulldir, (err) =>
       if err
-        @logger.error "Error removing directories for `#{dirloc}`."
-      fn(null, true)
+        @logger.error "#{msg} `#{dirloc}`."
+
+      fs.rmdir [fulldir, "tags"].join('/'), (err) =>
+        if err
+          @logger.error "#{msg} `#{dirloc}/tags`."
+
+        fs.rmdir [fulldir, "branches"].join('/'), (err) =>
+          if err
+            @logger.error "#{msg} `#{dirloc}/branches`."
+          fn(null, true)
 
 module.exports = Application

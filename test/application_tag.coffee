@@ -6,8 +6,10 @@ describe 'ApplicationTag', ->
   app = null
 
   add_files = [
-    { name: "myapp.ipa",   md5: "54e05c292ef585094a12b20818b3f952" },
-    { name: "myapp.plist", md5: "ab1e5d1ed4be9d7cb8376cbf12f85ca8" }
+    { name: "test_user.example_app.branch.master.ipa",
+    md5: "8b64ea08254c85e69d65ee7294431e0a" },
+    { name: "test_user.example_app.branch.master.plist",
+    md5: "f1a8c3b91286aa1971a18b61e68b9ea8" }
   ]
 
   beforeEach (done) ->
@@ -42,7 +44,11 @@ describe 'ApplicationTag', ->
       tags.list (err, reply) =>
         assert.ifError err
         assert.deepEqual reply, ["1.0"]
-        done()
+        fs.exists [config.get('repository'),
+        "zoidberg", "brainslugs", "tags", "1.0"].join('/'),
+            (exists) ->
+              exists.should.equal true
+              done()
 
   it "should be able to show information for a single tag", (done) ->
     tag = app.tags().build('1.0')
@@ -93,10 +99,14 @@ describe 'ApplicationTag', ->
       tags2.save (err, reply) =>
         assert.ifError err
         tags2.delete "thefunk", (err, reply) =>
-          tags2.list (err, reply) =>
-            assert.ifError err
-            assert.deepEqual reply, ["sillytag"]
-            done()
+          fs.exists [config.get('repository'),
+          "zoidberg", "brainslugs", "tags", "thefunk"].join('/'),
+            (exists) ->
+              exists.should.equal false
+              tags2.list (err, reply) =>
+                assert.ifError err
+                assert.deepEqual reply, ["sillytag"]
+                done()
 
   it "should be able to remove all tags from an app", (done) ->
     tags1 = app.tags().build('sillytag')

@@ -7,7 +7,7 @@ crypto = require 'crypto'
  * @return {String} The md5sum of the file
 ###
 filemd5 = (filepath, cb) ->
-  fs.readFile filepath, 'utf8', (err, data) ->
+  fs.readFile filepath, 'binary', (err, data) ->
     cb(err, crypto.createHash('md5').update(data).digest('hex'))
 
 module.exports = filemd5

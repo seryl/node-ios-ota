@@ -1,3 +1,4 @@
+fs = require 'fs'
 async = require 'async'
 
 RedisObject = require './redis_object'
@@ -56,7 +57,8 @@ class ApplicationBranch extends RedisObject
     stat_add = @redis.sadd(@branchlist_prefix(), @current)
     status = if (stat_add) then null else
       message: "Error saving branch: `#{@user}/#{@application}/#{@current}`."
-    fn(status, @current)
+    @setup_directories @current, (err, reply) =>
+      fn(status, @current)
 
   ###*
    * Deletes a single branch for the given application.
@@ -67,7 +69,8 @@ class ApplicationBranch extends RedisObject
     @current = branch
     @redis.srem(@branchlist_prefix(), branch)
     @files().delete_all (err, reply) =>
-      fn(null)
+      @delete_directories branch, (err, reply) =>
+        fn(null)
 
   ###*
    * Deletes the branches for a given application.
@@ -83,5 +86,29 @@ class ApplicationBranch extends RedisObject
   ###
   files: =>
     return new Files(@user, @application, @object_name, @current)
+
+  ###*
+   * Creates the directories for the branch.
+   * @param {Object} (branch) The branch to create directories for
+   * @param {Function} (fn) The callback function
+  ###
+  setup_directories: (branch, fn) =>
+    dirloc = [@user, @application, @object_name, branch].join('/')
+    fs.mkdir [@config.get('repository'), dirloc].join('/'), (err, made) =>
+      if err
+        @logger.error "Error setting up directories for `#{dirloc}`."
+      fn(err, made)
+
+  ###*
+   * Deletes the directories for the branch.
+   * @param {Object} (branch) The branch to create directories for
+   * @param {Function} (fn) The callback function
+  ###
+  delete_directories: (branch, fn) =>
+    dirloc = [@user, @application, @object_name, branch].join('/')
+    fs.rmdir [@config.get('repository'), dirloc].join('/'), (err) =>
+      if err
+        @logger.error "Error removing directories for `#{dirloc}`."
+      fn(null, true)
 
 module.exports = ApplicationBranch

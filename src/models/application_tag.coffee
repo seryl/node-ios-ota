@@ -1,3 +1,4 @@
+fs = require 'fs'
 async = require 'async'
 
 RedisObject = require './redis_object'
@@ -56,7 +57,8 @@ class ApplicationTag extends RedisObject
     stat_add = @redis.sadd(@taglist_prefix(), @current)
     status = if (stat_add) then null else
       message: "Error saving tag: `#{@user}/#{@application}/#{@current}`."
-    fn(status, @current)
+    @setup_directories @current, (err, reply) =>
+      fn(status, @current)
 
   ###*
    * Deletes a single tag for the given application.
@@ -67,7 +69,8 @@ class ApplicationTag extends RedisObject
     @current = tag
     @redis.srem(@taglist_prefix(), tag)
     @files().delete_all (err, reply) =>
-      fn(null)
+      @delete_directories tag, (err, reply) =>
+        fn(null)
 
   ###*
    * Deletes all of the tags for the current application.
@@ -83,5 +86,29 @@ class ApplicationTag extends RedisObject
   ###
   files: =>
     return new Files(@user, @application, @object_name, @current)
+
+  ###*
+   * Creates the directories for the tag.
+   * @param {Object} (tag) The tag to create directories for
+   * @param {Function} (fn) The callback function
+  ###
+  setup_directories: (tag, fn) =>
+    dirloc = [@user, @application, @object_name, tag].join('/')
+    fs.mkdir [@config.get('repository'), dirloc].join('/'), (err, made) =>
+      if err
+        @logger.error "Error setting up directories for `#{dirloc}`."
+      fn(err, made)
+
+  ###*
+   * Deletes the directories for the application.
+   * @param {Object} (tag) The tag to create directories for
+   * @param {Function} (fn) The callback function
+  ###
+  delete_directories: (tag, fn) =>
+    dirloc = [@user, @application, @object_name, tag].join('/')
+    fs.rmdir [@config.get('repository'), dirloc].join('/'), (err) =>
+      if err
+        @logger.error "Error removing directories for `#{dirloc}`."
+      fn(null, true)
 
 module.exports = ApplicationTag

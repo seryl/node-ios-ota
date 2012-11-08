@@ -97,4 +97,28 @@ class Files extends RedisObject
         @redis.hdel.apply(@redis, reply)
       fn(null)
 
+  # ###*
+  #  * Sets up the files in the proper directory.
+  #  * @param {Object} (tag) The tag to create directories for
+  #  * @param {Function} (fn) The callback function
+  # ###
+  # setup_files: (name, fn) =>
+    # dirloc = [@user, @application, @dtype, name].join('/')
+  #   fs.mkdir [@config.get('repository'), dirloc].join('/'), (err, made) =>
+  #     if err
+  #       @logger.error "Error setting up directories for `#{dirloc}`."
+  #     fn(err, made)
+
+  # ###*
+  #  * Deletes the directories for the application.
+  #  * @param {Object} (tag) The tag to create directories for
+  #  * @param {Function} (fn) The callback function
+  # ###
+  # delete_files: (tag, fn) =>
+  #   dirloc = [@user, @application, @dtype, name].join('/')
+  #   fs.rmdir [@config.get('repository'), dirloc].join('/'), (err) =>
+  #     if err
+  #       @logger.error "Error removing directories for `#{dirloc}`."
+  #     fn(null, true)
+
 module.exports = Files
