@@ -8,7 +8,7 @@ Logger = require './logger'
 User = require './models/user'
 
 ###*
- * The iOS-ota webserver command line interface class.
+ * The iOS-ota webserver class.
 ###
 class WebServer
   constructor: ->

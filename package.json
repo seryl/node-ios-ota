@@ -17,6 +17,7 @@
     "formidable": "1.0.x",
     "merge-recursive": "0.0.x",
     "mkdirp": "0.3.x",
+    "mv": "0.0.x",
     "async": "0.1.x",
     "pkginfo": "0.2.x"
   },

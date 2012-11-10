@@ -1,6 +1,9 @@
 async = require 'async'
+path = require 'path'
+mv = require 'mv'
 
 RedisObject = require './redis_object'
+filemd5 = require '../filemd5'
 
 ###*
  * A helper for working with files for a branch or tag of an application.
@@ -68,14 +71,17 @@ class Files extends RedisObject
   save: (files, fn) =>
     unless (files instanceof Array)
       files = Array(files)
+
     filemap = []
     filemap.push @files_prefix()
-    for f in files
-      filemap.push f.name
-      filemap.push f.md5
 
-    @redis.hmset.apply(@redis, filemap)
-    fn(null, filemap)
+    async.map files, @setup_file, (err, reply) =>
+      for f in reply
+        filemap.push f.name
+        filemap.push f.md5
+
+      @redis.hmset.apply(@redis, filemap)
+      fn(null, filemap)
 
   ###*
    * Deletes a single file from the files hashmap.
@@ -97,17 +103,29 @@ class Files extends RedisObject
         @redis.hdel.apply(@redis, reply)
       fn(null)
 
-  # ###*
-  #  * Sets up the files in the proper directory.
-  #  * @param {Object} (tag) The tag to create directories for
-  #  * @param {Function} (fn) The callback function
-  # ###
-  # setup_files: (name, fn) =>
-    # dirloc = [@user, @application, @dtype, name].join('/')
-  #   fs.mkdir [@config.get('repository'), dirloc].join('/'), (err, made) =>
-  #     if err
-  #       @logger.error "Error setting up directories for `#{dirloc}`."
-  #     fn(err, made)
+  ###*
+   * Sets up the file in the proper directory.
+   * @param {Object} (file) The file to add to the current leaf
+   * @param {Function} (fn) The callback function
+   *
+   * @example
+   *
+   *  f =
+   *     location: "/tmp/54e05c292ef585094a12b20818b3f952"
+   *      name: "myapp.ipa"
+   * 
+   *  setup_file(f, (err, reply) -> console.log reply)
+   *
+  ###
+  setup_file: (file, fn) =>
+    dirloc = [@user, @application, @dtype, @current].join('/')
+    target_loc = [@config.get('repository'), dirloc, file.name].join('/')
+
+    mv file.location, target_loc, (err) =>
+      filemd5 target_loc, (err, data) =>
+        if err
+          @logger.error "Error setting up files for `#{target_loc}`."
+        fn(err, { name: file.name, md5: data })
 
   # ###*
   #  * Deletes the directories for the application.
