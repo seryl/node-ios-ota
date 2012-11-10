@@ -1,5 +1,6 @@
-async = require 'async'
 path = require 'path'
+fs = require 'fs'
+async = require 'async'
 mv = require 'mv'
 
 RedisObject = require './redis_object'
@@ -63,8 +64,8 @@ class Files extends RedisObject
    * @example
    *
    *   files = [
-   *     { name: "myapp.ipa",   md5: "54e05c292ef585094a12b20818b3f952" },
-   *     { name: "myapp.plist", md5: "ab1e5d1ed4be9d7cb8376cbf12f85ca8" }
+   *     { location: "/tmp/54e05c292ef585094a12b20818b3f952", name: "myapp.ipa" },
+   *     { location: "/tmp/ab1e5d1ed4be9d7cb8376cbf12f85ca8", name: "myapp.plist" }
    *   ]
    *
   ###
@@ -74,7 +75,6 @@ class Files extends RedisObject
 
     filemap = []
     filemap.push @files_prefix()
-
     async.map files, @setup_file, (err, reply) =>
       for f in reply
         filemap.push f.name
@@ -101,7 +101,8 @@ class Files extends RedisObject
       unless reply.length == 0
         reply.unshift @files_prefix()
         @redis.hdel.apply(@redis, reply)
-      fn(null)
+      @delete_files (err, reply) =>
+        fn(null)
 
   ###*
    * Sets up the file in the proper directory.
@@ -127,16 +128,17 @@ class Files extends RedisObject
           @logger.error "Error setting up files for `#{target_loc}`."
         fn(err, { name: file.name, md5: data })
 
-  # ###*
-  #  * Deletes the directories for the application.
-  #  * @param {Object} (tag) The tag to create directories for
-  #  * @param {Function} (fn) The callback function
-  # ###
-  # delete_files: (tag, fn) =>
-  #   dirloc = [@user, @application, @dtype, name].join('/')
-  #   fs.rmdir [@config.get('repository'), dirloc].join('/'), (err) =>
-  #     if err
-  #       @logger.error "Error removing directories for `#{dirloc}`."
-  #     fn(null, true)
+  ###*
+   * Deletes the files for the current leaf.
+   * @param {Function} (fn) The callback function
+  ###
+  delete_files: (fn) =>
+    dirloc = [@user, @application, @dtype, @current].join('/')
+    target_dir = [@config.get('repository'), dirloc].join('/')
+    fs.readdir target_dir, (err, reply) =>
+      async.parallel reply, fs.unlink, (err) =>
+        if err
+          @logger.error "Error removing directories for `#{dirloc}`."
+        fn(null, true)
 
 module.exports = Files
