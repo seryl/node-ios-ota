@@ -1,6 +1,6 @@
 fs = require 'fs'
 restify = require 'restify'
-async = require 'async'
+util = require 'util'
 require('pkginfo')(module, 'name', 'version')
 
 Config = require './config'
@@ -156,23 +156,30 @@ class WebServer
           message: "Successfully updated application `#{req.params.app}`."
         return next()
 
-    # Returns the list of applications for a specific user.
+    # Returns the list of branches/tags for a specific app.
     @app.get '/:user/:app', (req, res, next) =>
       location = [req.params.user, req.params.app]
-      # user = new User({ name: req.params.user })
-      # user.applications().build(req.params.app).find (err, reply) =>
       loc = location.join('/')
-      location.unshift(@config.get('repository'))
-      fs.readdir location.join('/'),
-        (err, reply) =>
-          if err
-            res.json 404,
-              code: 404
-              user: req.params.user
-              app: req.params.app
-              location: loc
-              message: "The application `#{req.params.app}` does not exist."
-            return next()
+
+      user = new User({ name: req.params.user })
+      app = user.applications()
+      app.build(req.params.app).find req.params.app, (err, reply) =>
+        if err
+          res.json 404,
+            code: 404
+            user: req.params.user
+            app: req.params.app
+            location: loc
+            message: "The application `#{req.params.app}` does not exist."
+          return next()
+
+        res.json 200,
+          user: req.params.user
+          app: req.params.app
+          location: loc
+          branches: reply.branches
+          tags: reply.tags
+        return next()
 
     # Lists all of the branches for a specified user/application.
     @app.get '/:user/:app/branches', (req, res, next) =>
@@ -212,16 +219,14 @@ class WebServer
           res.json 200, name: reply
           return next()
         else
-          mapto_flist = (file) ->
-            { location: file.path, name: file.name }
+          mapto_flist = (file) =>
+            return { location: file.path, name: file.name }
 
           # TODO: Check whether or we need to update the files.
           flist = [req.params.files[k] for k in Object.keys(req.params.files)]
-          async.map flist[0], mapto_flist, (err, results) =>
-            console.log err
-            console.log results
-          # res.json 200, message: flist[0]
-          # return next()
+          f_normal = [mapto_flist(f) for f in flist[0]][0]
+          res.json 200, message: f_normal
+          return next()
 
     # Creates or updates a branch re-updating files if they are passed.
     @app.post '/:user/:app/branches/:branch', (req, res, next) =>
@@ -233,11 +238,24 @@ class WebServer
           res.json 200, name: reply
           return next()
         else
+          mapto_flist = (file) =>
+            return { location: file.path, name: file.name }
+
           # TODO: Check whether or we need to update the files.
-          console.log req.params.files
+          flist = [req.params.files[k] for k in Object.keys(req.params.files)]
+          f_normal = [mapto_flist(f) for f in flist[0]][0]
+          files = branch.files()
+          files.save f_normal, (err, reply) =>
+            res.json 200, files: reply
+            return next()
 
     # Shows the tag info for a specified user/application/tag
     @app.get '/:user/:app/tags/:tag', (req, res, next) =>
+      if @is_ios_useragent(req)
+        res.header('Location', "./#{req.params.tag}/download")
+        res.send(302)
+        return next()
+
       user = new User({ name: req.params.user })
       app = user.applications().build(req.params.app)
       tag = app.tags().build(req.params.tag)
@@ -247,6 +265,11 @@ class WebServer
 
     # Shows the branch info for a specified user/application/branch
     @app.get '/:user/:app/branches/:branch', (req, res, next) =>
+      if @is_ios_useragent(req)
+        res.header('Location', "./#{req.params.branch}/download")
+        res.send(302)
+        return next()
+
       user = new User({ name: req.params.user })
       app = user.applications().build(req.params.app)
       branch = app.branches().build(req.params.branch)
@@ -267,8 +290,68 @@ class WebServer
       user = new User({ name: req.params.user })
       app = user.applications().build(req.params.app)
       app.branches().delete 'master', (err, reply) =>
-      res.json 200, message: "successfully deleted `#{req.params.branch}`."
+        res.json 200, message: "successfully deleted `#{req.params.branch}`."
       return next()
+
+    # Download plist files for a branch
+    @app.get '/:user/:app/tags/:tag/download', (req, res, next) =>
+      tg = req.params.tag
+      res.header('Location', "./download/#{tg}.plist")
+      res.send(302)
+      return next()
+
+    # Download plist files for a tag
+    @app.get '/:user/:app/branches/:branch/download', (req, res, next) =>
+      br = req.params.branch
+      res.header('Location', "./download/#{br}.plist")
+      res.send(302)
+      return next()
+
+    # Download specific file for a branch
+    @app.get '/:user/:app/branches/:branch/download/:file', (req, res, next) =>
+      user = new User({ name: req.params.user })
+      app = user.applications().build(req.params.app)
+      branches = app.branches().build(req.params.branch)
+      target = branches.files().filepath(req.params.file)
+
+      fs.stat target, (err, reply) =>
+        res.writeHead(200, {
+          'Content-Type': 'application/octet-stream',
+          'Content-Length': reply.size
+        })
+        readStream = fs.createReadStream(target)
+        util.pump(readStream, res)
+        return next()
+
+    # Download specific file for a tag
+    @app.get '/:user/:app/tags/:tag/download/:file', (req, res, next) =>
+      user = new User({ name: req.params.user })
+      app = user.applications().build(req.params.app)
+      tags = app.tags().build(reqs.params.tag)
+      target = branches.files().filepath(req.params.file)
+
+      fs.stat target, (err, reply) =>
+        res.writeHead(200, {
+          'Content-Type': 'application/octet-stream',
+          'Content-Length': reply.size
+        })
+        readStream = fs.createReadStream(target)
+        util.pump(readStream, res)
+        return next()
+
+  ###*
+   * Check what the user-agent is an iPhone or iPad.
+   * @params {Object} (req) The restify request object
+   * @return {Boolean} Whether or not the user-agent is an iphone/ipad
+  ###
+  is_ios_useragent: (req) =>
+    ua_regex = /[iI][pP](hone|ad)/
+    return (req.headers['user-agent'].match(ua_regex) != null)
+
+  redirect_to_plist: (req, res, next) =>
+    res.header('Location', '/')
+    res.send(302);
+    return next(false);
 
   ###*
    * Authenticates the user.

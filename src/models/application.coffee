@@ -53,13 +53,22 @@ class Application extends RedisObject
   ###
   find: (name, admin=false, fn) =>
     if typeof admin == "function" then fn = admin
-    @current = null
+    original = @current
+    @current = name
     @list (err, applications) =>
       if err then return fn(err, applications)
-      # if name in applications
-        # Get the branches for the application
-        # Get the tags for the application
-    # fn(null, [])
+
+      resp = {}
+      resp.branches = []
+      resp.tags = []
+      if name in applications
+        @branches().list (err, reply) =>
+          resp.branches = reply
+          @tags().list (err, reply) =>
+            resp.tags = reply
+            fn(null, resp)
+      else
+        fn(null, resp)
 
   ###*
    * Adds a new redis object of the current type to the database.

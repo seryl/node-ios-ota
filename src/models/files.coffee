@@ -57,6 +57,14 @@ class Files extends RedisObject
       fn(err, reply)
 
   ###*
+   * Returns the path to the file for reading.
+  ###
+  filepath: (filename) =>
+    dirloc = [@user, @application, @dtype, @current].join('/')
+    target_dir = [@config.get('repository'), dirloc].join('/')
+    return path.normalize([target_dir, filename].join('/'))
+
+  ###*
    * Adds a new files object, merging and saving the current if it exists.
    * @param {Object} (files) A single or list of filenames and md5s to add
    * @param {Function} (fn) The callback function
@@ -75,13 +83,17 @@ class Files extends RedisObject
 
     filemap = []
     filemap.push @files_prefix()
+
+    flist = []
+
     async.map files, @setup_file, (err, reply) =>
       for f in reply
         filemap.push f.name
         filemap.push f.md5
+        flist.push { name: f.name, md5: f.md5 }
 
       @redis.hmset.apply(@redis, filemap)
-      fn(null, filemap)
+      fn(null, flist)
 
   ###*
    * Deletes a single file from the files hashmap.
@@ -113,20 +125,22 @@ class Files extends RedisObject
    *
    *  f =
    *     location: "/tmp/54e05c292ef585094a12b20818b3f952"
-   *      name: "myapp.ipa"
+   *      name: "master.ipa"
    * 
    *  setup_file(f, (err, reply) -> console.log reply)
    *
   ###
   setup_file: (file, fn) =>
+    fe = @file_extension(file.name)
+    fname = "#{@current}.#{fe}"
     dirloc = [@user, @application, @dtype, @current].join('/')
-    target_loc = [@config.get('repository'), dirloc, file.name].join('/')
+    target_loc = [@config.get('repository'), dirloc, fname].join('/')
 
     mv file.location, target_loc, (err) =>
       filemd5 target_loc, (err, data) =>
         if err
           @logger.error "Error setting up files for `#{target_loc}`."
-        fn(err, { name: file.name, md5: data })
+        fn(err, { name: fname, md5: data })
 
   ###*
    * Deletes the files for the current leaf.
@@ -140,5 +154,14 @@ class Files extends RedisObject
         if err
           @logger.error "Error removing directories for `#{dirloc}`."
         fn(null, true)
+
+  ###*
+   * Returns the file extension.
+   * @param {String} (filename) The name of the file
+   * @return {String} The filename extension
+  ###
+  file_extension: (filename) =>
+    ext = path.extname(filename||'').split('.')
+    return ext[ext.length - 1]
 
 module.exports = Files
