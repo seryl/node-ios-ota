@@ -48,7 +48,11 @@ A node-based iOS over-the-air service.
   <tr>
     <td>upload files for a branch/tag</td>
     <td>PUT</td>
-    <td>/<code>user</code>/<code>application</code></td>
+    <td>
+      /<code>user</code>/<code>application</code>/branches/<code>branch</code>
+      <br />OR<br />
+      /<code>user</code>/<code>application</code>/tags/<code>tag</code>
+    </td>
     <td>curl -sL -H "Content-Type: application/json" -X PUT localhost:3000/<code>user</code>/<code>application</code> -d '{"username":"admin","secret":"admin"}'</td>
   </tr>
 </table>
