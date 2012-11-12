@@ -29,18 +29,27 @@ A node-based iOS over-the-air service.
   </tr>
   <tr>
     <td>create application</td>
+    <td>PUT</td>
     <td>/<code>user</code>/<code>application</code></td>
     <td>curl -sL -H "Content-Type: application/json" -X PUT localhost:3000/<code>user</code>/<code>application</code> -d '{"username":"admin","secret":"admin"}'</td>
   </tr>
   <tr>
-    <td>status (all)</td>
-    <td>/status</td>
-    <td>curl -sL http://localhost:8080/status</td>
+    <td>create a branch</td>
+    <td>PUT</td>
+    <td>/<code>user</code>/<code>application</code></td>
+    <td>curl -sL -H "Content-Type: application/json" -X PUT localhost:3000/<code>user</code>/<code>application</code>/branches/<code>branch</code> -d '{"username":"admin","secret":"admin"}'</td>
   </tr>
   <tr>
-    <td>status (specific)</td>
-    <td>/status/<code>system</code></td>
-    <td>curl -sL http://localhost:8080/status/<code>6cbb78b2925a</code></td>
+    <td>create a tag</td>
+    <td>PUT</td>
+    <td>/<code>user</code>/<code>application</code></td>
+    <td>curl -sL -H "Content-Type: application/json" -X PUT localhost:3000/<code>user</code>/<code>application</code>/tags/<code>tag</code> -d '{"username":"admin","secret":"admin"}'</td>
+  </tr>
+  <tr>
+    <td>upload files for a branch/tag</td>
+    <td>PUT</td>
+    <td>/<code>user</code>/<code>application</code></td>
+    <td>curl -sL -H "Content-Type: application/json" -X PUT localhost:3000/<code>user</code>/<code>application</code> -d '{"username":"admin","secret":"admin"}'</td>
   </tr>
 </table>
 
