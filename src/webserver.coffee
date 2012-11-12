@@ -1,5 +1,6 @@
 fs = require 'fs'
 restify = require 'restify'
+async = require 'async'
 require('pkginfo')(module, 'name', 'version')
 
 Config = require './config'
@@ -158,6 +159,8 @@ class WebServer
     # Returns the list of applications for a specific user.
     @app.get '/:user/:app', (req, res, next) =>
       location = [req.params.user, req.params.app]
+      # user = new User({ name: req.params.user })
+      # user.applications().build(req.params.app).find (err, reply) =>
       loc = location.join('/')
       location.unshift(@config.get('repository'))
       fs.readdir location.join('/'),
@@ -205,10 +208,20 @@ class WebServer
       app = user.applications().build(req.params.app)
       tag = app.tags().build(req.params.tag)
       tag.save (err, reply) =>
-        # TODO: Check whether or we need to update the files.
-        console.log req.params.files
-        res.json 200, name: reply
-        return next()
+        if typeof req.params.files == undefined
+          res.json 200, name: reply
+          return next()
+        else
+          mapto_flist = (file) ->
+            { location: file.path, name: file.name }
+
+          # TODO: Check whether or we need to update the files.
+          flist = [req.params.files[k] for k in Object.keys(req.params.files)]
+          async.map flist[0], mapto_flist, (err, results) =>
+            console.log err
+            console.log results
+          # res.json 200, message: flist[0]
+          # return next()
 
     # Creates or updates a branch re-updating files if they are passed.
     @app.post '/:user/:app/branches/:branch', (req, res, next) =>
@@ -216,10 +229,12 @@ class WebServer
       app = user.applications().build(req.params.app)
       branch = app.branches().build(req.params.branch)
       branch.save (err, reply) =>
-        # TODO: Check whether or we need to update the files.
-        console.log req.params.files
-        res.json 200, name: reply
-        return next()
+        if typeof req.params.files == undefined
+          res.json 200, name: reply
+          return next()
+        else
+          # TODO: Check whether or we need to update the files.
+          console.log req.params.files
 
     # Shows the tag info for a specified user/application/tag
     @app.get '/:user/:app/tags/:tag', (req, res, next) =>

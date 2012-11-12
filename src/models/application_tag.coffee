@@ -94,10 +94,15 @@ class ApplicationTag extends RedisObject
   ###
   setup_directories: (tag, fn) =>
     dirloc = [@user, @application, @object_name, tag].join('/')
-    fs.mkdir [@config.get('repository'), dirloc].join('/'), (err, made) =>
-      if err
-        @logger.error "Error setting up directories for `#{dirloc}`."
-      fn(err, made)
+    target = [@config.get('repository'), dirloc].join('/')
+    fs.exists target, (exists) =>
+      unless exists
+        fs.mkdir target, (err, made) =>
+          if err
+            @logger.error "Error setting up directories for `#{dirloc}`."
+            fn(err, made)
+      else
+        fn(null, false)
 
   ###*
    * Deletes the directories for the application.
