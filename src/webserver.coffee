@@ -18,7 +18,7 @@ class WebServer
     @identity = Identity.get()
     @app = restify.createServer( name: exports.name )
     @app.use(restify.authorizationParser());
-    @app.use(restify.bodyParser({ mapParams: true }))
+    @app.use(restify.bodyParser({ mapParams: true, maxBodySize: 0 }))
     @setup_routing()
     @app.listen(@config.get('port'))
     @logger.info "Webserver is up at: http://0.0.0.0:#{@config.get('port')}"
