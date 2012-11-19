@@ -161,7 +161,8 @@ class Files extends RedisObject
    * @return {String} The filename extension
   ###
   file_extension: (filename) =>
-    ext = path.extname(filename||'').split('.')
-    return ext[ext.length - 1]
+    ext = path.basename(filename||'').split('.')
+    ext.shift()
+    return ext.join('.')
 
 module.exports = Files
