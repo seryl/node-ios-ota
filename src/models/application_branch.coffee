@@ -113,7 +113,6 @@ class ApplicationBranch extends RedisObject
     dirloc = [@user, @application, @object_name, branch].join('/')
     fs.rmdir [@config.get('repository'), dirloc].join('/'), (err) =>
       if err
-        console.log err
         @logger.error "Error removing directories for `#{dirloc}`."
       fn(null, true)
 

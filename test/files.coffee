@@ -6,10 +6,11 @@ describe 'Files', ->
   app = null
   branch = null
   tag = null
+  dup_files = []
 
   add_files = [
-    { name: "myapp.ipa",   md5: "54e05c292ef585094a12b20818b3f952" },
-    { name: "myapp.plist", md5: "ab1e5d1ed4be9d7cb8376cbf12f85ca8" }
+    { name: "master.ipa",   md5: "8b64ea08254c85e69d65ee7294431e0a" },
+    { name: "master.plist", md5: "0a1b8472e01bc836acecd246347d4492" }
   ]
 
   before (done) ->
@@ -30,7 +31,16 @@ describe 'Files', ->
           branch.save (err, reply) =>
             tag = app.tags().build('1.0')
             tag.save (err, reply) =>
-              done()
+              b_cp = os.tmpDir()
+              dup_files = [
+                { location: b_cp, name: "master.ipa" },
+                { location: b_cp, name: "master.plist" }
+              ]
+
+              pfix = "#{__dirname}/fixtures"
+              fs.copy "#{pfix}/master.ipa", "#{b_cp}master.ipa", (err) =>
+                fs.copy "#{pfix}/master.plist", "#{b_cp}master.plist", (err) =>
+                  done()
 
   after (done) ->
     user.delete_all ->
@@ -70,72 +80,50 @@ describe 'Files', ->
       assert.deepEqual reply, []
       done()
 
-  it "should be able to add a file to the files", (done) ->
-    b_cp = os.tmpDir()
-    dup_files = [
-      { location: "#{b_cp}myapp.ipa",   md5: "54e05c292ef585094a12b20818b3f952" },
-      { location: "#{b_cp}myapp.plist", md5: "ab1e5d1ed4be9d7cb8376cbf12f85ca8" }
-    ]
+  it "should be able to cleanup the file extension for a file", (done) ->
+    files = branch.files()
+    test_dsym = 'awesome.cool.awesome.dSYM.tar.gz'
+    test_plist = 'profile-2.0-0.plist'
+    test_ipa = 'myawesom-cool.nextone-0.ipa'
 
-    pfix = "#{__dirname}/fixtures"
-    fs.copy "#{pfix}/master.ipa", "#{b_cp}master.ipa", (err) =>
-      fs.copy "#{pfix}/master.plist", "#{b_cp}master.plist", (err) =>
-        files = branch.files()
-        files.save dup_files, (err, reply) =>
+    files.file_extension(test_dsym).should.equal "dSYM.tar.gz"
+    files.file_extension(test_plist).should.equal "plist"
+    files.file_extension(test_ipa).should.equal "ipa"
+    done()
+
+  it "should be able to add a file to the files", (done) ->
+    files = branch.files()
+    files.save dup_files, (err, reply) =>
+      files.list (err, reply) =>
+        assert.equal err, null
+        assert.deepEqual reply, (f.name for f in add_files)
+        done()
+
+  it "should be able to remove a file from the files and hash", (done) ->
+    files = branch.files()
+    files.save dup_files, (err, reply) =>
+      files.list (err, reply) =>
+        assert.equal err, null
+        assert.deepEqual reply, (f.name for f in add_files)
+        done()
+
+  it "should be able to remove all files from the files", (done) ->
+    files = branch.files()
+    files.save dup_files, (err, reply) =>
+      files.list (err, reply) =>
+        assert.equal err, null
+        assert.deepEqual reply, (f.name for f in add_files)
+        files.delete_all (err) =>
+          assert.equal err, null
           files.list (err, reply) =>
             assert.equal err, null
-            # assert.deepEqual reply, (f.name for f in add_files)
+            assert.deepEqual reply, []
             done()
 
-  # it "should be able to remove a file from the files and hash", (done) ->
-  #   files = branch.files()
-  #   files.save add_files, (err, reply) =>
-  #     files.list (err, reply) =>
-  #       assert.equal err, null
-  #       assert.deepEqual reply, (f.name for f in add_files)
-  #       done()
-
-  # it "should be able to remove all files from the files", (done) ->
-  #   files = branch.files()
-  #   files.save add_files, (err, reply) =>
-  #     files.list (err, reply) =>
-  #       assert.equal err, null
-  #       assert.deepEqual reply, (f.name for f in add_files)
-  #       files.delete_all (err) =>
-  #         assert.equal err, null
-  #         files.list (err, reply) =>
-  #           assert.equal err, null
-  #           assert.deepEqual reply, []
-  #           done()
-
-  # it "should be able to update the md5sum for a file", (done) ->
-  #   updated = { name: "myapp.ipa", md5:  "33b42f456cd70aea284ef49d2c4a8652" }
-  #   files = branch.files()
-  #   files.save add_files, (err, reply) =>
-  #     files.list (err, reply) =>
-  #       assert.equal err, null
-  #       assert.deepEqual reply, (f.name for f in add_files)
-  #       files.save updated, (err, reply) =>
-  #         assert.equal err, null
-  #         files.find 'myapp.ipa', (err, reply) =>
-  #           assert.equal err, null
-  #           assert.deepEqual reply, updated
-  #           done()
-
-  # it "should be able to list all the md5sums for all files", (done) ->
-  #   files = branch.files()
-  #   files.save add_files, (err, reply) =>
-  #     files.all (err, reply) =>
-  #       assert.equal err, null
-  #       assert.deepEqual reply, add_files
-  #       done()
-
-  # it "should be able to cleanup the file extension for a file", (done) ->
-  #   files = branch.files()
-  #   test_dsym = 'awesome.cool.awesome.dSYM.tar.gz'
-  #   test_plist = 'profile-2.0-0.plist'
-  #   test_ipa = 'myawesom-cool.nextone-0.ipa'
-
-  #   files.file_extension(test_dsym).should.equal "DSYM.tar.gz"
-  #   files.file_extension(test_plist).should.equal "plist"
-  #   files.file_extension(test_ipa).should.equal "ipa"
+  it "should be able to list all the md5sums for all files", (done) ->
+    files = branch.files()
+    files.save dup_files, (err, reply) =>
+      files.all (err, reply) =>
+        assert.equal err, null
+        assert.deepEqual reply, add_files
+        done()

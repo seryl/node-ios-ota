@@ -69,8 +69,8 @@ class ApplicationTag extends RedisObject
     @current = tag
     @redis.srem(@taglist_prefix(), tag)
     @files().delete_all (err, reply) =>
-      # @delete_directories tag, (err, reply) =>
-      fn(null, true)
+      @delete_directories tag, (err, reply) =>
+        fn(null, true)
 
   ###*
    * Deletes all of the tags for the current application.

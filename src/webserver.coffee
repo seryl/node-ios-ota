@@ -225,8 +225,15 @@ class WebServer
           # TODO: Check whether or we need to update the files.
           flist = [req.params.files[k] for k in Object.keys(req.params.files)]
           f_normal = [mapto_flist(f) for f in flist[0]][0]
-          res.json 200, message: f_normal
-          return next()
+          files = tag.files()
+          files.save f_normal, (err, reply) =>
+            res.json 200, files: reply
+            return next()
+
+          # files = branch.files()
+          # files.save f_normal, (err, reply) =>
+          #   res.json 200, files: reply
+          #   return next()
 
     # Creates or updates a branch re-updating files if they are passed.
     @app.post '/:user/:app/branches/:branch', (req, res, next) =>

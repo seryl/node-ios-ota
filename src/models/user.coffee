@@ -122,9 +122,8 @@ class User extends RedisObject
     @redis.srem(@userlist_prefix(), username)
     @redis.del(@user_prefix(username))
     @applications().delete_all (err, reply) =>
-      fn(err, true)
-      # @delete_directories username, (err, succ) =>
-      #   if err then fn(true, false) else fn(null, true)
+      @delete_directories username, (err, succ) =>
+        if err then fn(true, false) else fn(null, true)
 
   ###*
    * Deletes every user that currently exists.

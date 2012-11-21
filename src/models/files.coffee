@@ -72,8 +72,8 @@ class Files extends RedisObject
    * @example
    *
    *   files = [
-   *     { location: "/tmp/54e05c292ef585094a12b20818b3f952", name: "myapp.ipa" },
-   *     { location: "/tmp/ab1e5d1ed4be9d7cb8376cbf12f85ca8", name: "myapp.plist" }
+   *     { location: "/tmp/54e05c292ef585094a12b20818b3f952", name: "master.ipa" },
+   *     { location: "/tmp/ab1e5d1ed4be9d7cb8376cbf12f85ca8", name: "master.plist" }
    *   ]
    *
   ###
@@ -85,14 +85,13 @@ class Files extends RedisObject
     filemap.push @files_prefix()
 
     flist = []
-
     async.map files, @setup_file, (err, reply) =>
       for f in reply
         filemap.push f.name
         filemap.push f.md5
         flist.push { name: f.name, md5: f.md5 }
 
-      # @redis.hmset.apply(@redis, filemap)
+      @redis.hmset.apply(@redis, filemap)
       fn(null, flist)
 
   ###*
@@ -136,15 +135,11 @@ class Files extends RedisObject
     dirloc = [@user, @application, @dtype, @current].join('/')
     target_loc = [@config.get('repository'), dirloc, fname].join('/')
 
-    console.log file.location
-    console.log dirloc
-    fn(null, true)
-
-    # mv file.location, target_loc, (err) =>
-    #   filemd5 target_loc, (err, data) =>
-    #     if err
-    #       @logger.error "Error setting up files for `#{target_loc}`."
-    #     fn(err, { name: fname, md5: data })
+    mv path.normalize("#{file.location}/#{file.name}"), target_loc, (err) =>
+      filemd5 target_loc, (err, data) =>
+        if err
+          @logger.error "Error setting up files for `#{target_loc}`."
+        fn(err, { name: fname, md5: data })
 
   ###*
    * Deletes the files for the current leaf.
@@ -153,14 +148,8 @@ class Files extends RedisObject
   delete_files: (fn) =>
     dirloc = [@user, @application, @dtype, @current].join('/')
     target_dir = [@config.get('repository'), dirloc].join('/')
-    fs.readdir target_dir, (err, reply) =>
-      if reply.length
-        async.parallel reply, fs.unlink, (err) =>
-          if err
-            @logger.error "Error removing directories for `#{dirloc}`."
-          fn(null, true)
-      else
-        fn(null, true)
+    rimraf target_dir, (err) ->
+      fn(null, true)
 
   ###*
    * Returns the file extension.
@@ -168,9 +157,16 @@ class Files extends RedisObject
    * @return {String} The filename extension
   ###
   file_extension: (filename) =>
-    console.log filename
-    ext = path.basename(filename||'').split('.')
-    ext.shift()
-    return ext.join('.')
+    bname = path.basename(filename||'')
+    if /plist$/i.test bname
+      return 'plist'
+    else if /ipa$/i.test bname
+      return 'ipa'
+    else if /dsym.tar.gz$/i.test bname
+      return 'dSYM.tar.gz'
+    else
+      ext = bname.split('.')
+      ext.shift()
+      return ext.join('.')
 
 module.exports = Files
