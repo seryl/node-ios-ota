@@ -53,77 +53,78 @@ describe 'Files', ->
   it "should have the object name `files`", ->
     tag.files().object_name.should.equal "files"
     branch.files().object_name.should.equal "files"
+    console.log os.tmpDir()
 
-  it "should be able to generate a prefix for the (branches) file list", ->
-    app_suffix = "zoidberg::brainslugs::branches::master::files"
-    fl_prefix = "node-ios-ota::applications::#{app_suffix}"
-    branch.files().files_prefix().should.equal fl_prefix
+  # it "should be able to generate a prefix for the (branches) file list", ->
+  #   app_suffix = "zoidberg::brainslugs::branches::master::files"
+  #   fl_prefix = "node-ios-ota::applications::#{app_suffix}"
+  #   branch.files().files_prefix().should.equal fl_prefix
 
-  it "should be able to generate a prefix for the (tags) file list", ->
-    app_suffix = "zoidberg::brainslugs::tags::1.0::files"
-    fl_prefix = "node-ios-ota::applications::#{app_suffix}"
-    tag.files().files_prefix().should.equal fl_prefix
+  # it "should be able to generate a prefix for the (tags) file list", ->
+  #   app_suffix = "zoidberg::brainslugs::tags::1.0::files"
+  #   fl_prefix = "node-ios-ota::applications::#{app_suffix}"
+  #   tag.files().files_prefix().should.equal fl_prefix
 
-  it "should be able to generate a prefix for the (branches) files hash", ->
-    app_suffix = "zoidberg::brainslugs::branches::master::files"
-    files_prefix = fl_prefix = "node-ios-ota::applications::#{app_suffix}"
-    branch.files().files_prefix().should.equal files_prefix
+  # it "should be able to generate a prefix for the (branches) files hash", ->
+  #   app_suffix = "zoidberg::brainslugs::branches::master::files"
+  #   files_prefix = fl_prefix = "node-ios-ota::applications::#{app_suffix}"
+  #   branch.files().files_prefix().should.equal files_prefix
 
-  it "should be able to generate a prefix for the (tags) files hash", ->
-    app_suffix = "zoidberg::brainslugs::tags::1.0::files"
-    files_prefix = fl_prefix = "node-ios-ota::applications::#{app_suffix}"
-    tag.files().files_prefix().should.equal files_prefix
+  # it "should be able to generate a prefix for the (tags) files hash", ->
+  #   app_suffix = "zoidberg::brainslugs::tags::1.0::files"
+  #   files_prefix = fl_prefix = "node-ios-ota::applications::#{app_suffix}"
+  #   tag.files().files_prefix().should.equal files_prefix
 
-  it "should return an empty list for a files that is empty", (done) ->
-    branch.files().list (err, reply) ->
-      assert.equal err, null
-      assert.deepEqual reply, []
-      done()
+  # it "should return an empty list for a files that is empty", (done) ->
+  #   branch.files().list (err, reply) ->
+  #     assert.equal err, null
+  #     assert.deepEqual reply, []
+  #     done()
 
-  it "should be able to cleanup the file extension for a file", (done) ->
-    files = branch.files()
-    test_dsym = 'awesome.cool.awesome.dSYM.tar.gz'
-    test_plist = 'profile-2.0-0.plist'
-    test_ipa = 'myawesom-cool.nextone-0.ipa'
+  # it "should be able to cleanup the file extension for a file", (done) ->
+  #   files = branch.files()
+  #   test_dsym = 'awesome.cool.awesome.dSYM.tar.gz'
+  #   test_plist = 'profile-2.0-0.plist'
+  #   test_ipa = 'myawesom-cool.nextone-0.ipa'
 
-    files.file_extension(test_dsym).should.equal "dSYM.tar.gz"
-    files.file_extension(test_plist).should.equal "plist"
-    files.file_extension(test_ipa).should.equal "ipa"
-    done()
+  #   files.file_extension(test_dsym).should.equal "dSYM.tar.gz"
+  #   files.file_extension(test_plist).should.equal "plist"
+  #   files.file_extension(test_ipa).should.equal "ipa"
+  #   done()
 
-  it "should be able to add a file to the files", (done) ->
-    files = branch.files()
-    files.save dup_files, (err, reply) =>
-      files.list (err, reply) =>
-        assert.equal err, null
-        assert.deepEqual reply, (f.name for f in add_files)
-        done()
+  # it "should be able to add a file to the files", (done) ->
+  #   files = branch.files()
+  #   files.save dup_files, (err, reply) =>
+  #     files.list (err, reply) =>
+  #       assert.equal err, null
+  #       assert.deepEqual reply, (f.name for f in add_files)
+  #       done()
 
-  it "should be able to remove a file from the files and hash", (done) ->
-    files = branch.files()
-    files.save dup_files, (err, reply) =>
-      files.list (err, reply) =>
-        assert.equal err, null
-        assert.deepEqual reply, (f.name for f in add_files)
-        done()
+  # it "should be able to remove a file from the files and hash", (done) ->
+  #   files = branch.files()
+  #   files.save dup_files, (err, reply) =>
+  #     files.list (err, reply) =>
+  #       assert.equal err, null
+  #       assert.deepEqual reply, (f.name for f in add_files)
+  #       done()
 
-  it "should be able to remove all files from the files", (done) ->
-    files = branch.files()
-    files.save dup_files, (err, reply) =>
-      files.list (err, reply) =>
-        assert.equal err, null
-        assert.deepEqual reply, (f.name for f in add_files)
-        files.delete_all (err) =>
-          assert.equal err, null
-          files.list (err, reply) =>
-            assert.equal err, null
-            assert.deepEqual reply, []
-            done()
+  # it "should be able to remove all files from the files", (done) ->
+  #   files = branch.files()
+  #   files.save dup_files, (err, reply) =>
+  #     files.list (err, reply) =>
+  #       assert.equal err, null
+  #       assert.deepEqual reply, (f.name for f in add_files)
+  #       files.delete_all (err) =>
+  #         assert.equal err, null
+  #         files.list (err, reply) =>
+  #           assert.equal err, null
+  #           assert.deepEqual reply, []
+  #           done()
 
-  it "should be able to list all the md5sums for all files", (done) ->
-    files = branch.files()
-    files.save dup_files, (err, reply) =>
-      files.all (err, reply) =>
-        assert.equal err, null
-        assert.deepEqual reply, add_files
-        done()
+  # it "should be able to list all the md5sums for all files", (done) ->
+  #   files = branch.files()
+  #   files.save dup_files, (err, reply) =>
+  #     files.all (err, reply) =>
+  #       assert.equal err, null
+  #       assert.deepEqual reply, add_files
+  #       done()
