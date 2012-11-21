@@ -92,7 +92,7 @@ class Files extends RedisObject
         filemap.push f.md5
         flist.push { name: f.name, md5: f.md5 }
 
-      @redis.hmset.apply(@redis, filemap)
+      # @redis.hmset.apply(@redis, filemap)
       fn(null, flist)
 
   ###*
@@ -136,11 +136,15 @@ class Files extends RedisObject
     dirloc = [@user, @application, @dtype, @current].join('/')
     target_loc = [@config.get('repository'), dirloc, fname].join('/')
 
-    mv file.location, target_loc, (err) =>
-      filemd5 target_loc, (err, data) =>
-        if err
-          @logger.error "Error setting up files for `#{target_loc}`."
-        fn(err, { name: fname, md5: data })
+    console.log file.location
+    console.log dirloc
+    fn(null, true)
+
+    # mv file.location, target_loc, (err) =>
+    #   filemd5 target_loc, (err, data) =>
+    #     if err
+    #       @logger.error "Error setting up files for `#{target_loc}`."
+    #     fn(err, { name: fname, md5: data })
 
   ###*
    * Deletes the files for the current leaf.
@@ -150,9 +154,12 @@ class Files extends RedisObject
     dirloc = [@user, @application, @dtype, @current].join('/')
     target_dir = [@config.get('repository'), dirloc].join('/')
     fs.readdir target_dir, (err, reply) =>
-      async.parallel reply, fs.unlink, (err) =>
-        if err
-          @logger.error "Error removing directories for `#{dirloc}`."
+      if reply.length
+        async.parallel reply, fs.unlink, (err) =>
+          if err
+            @logger.error "Error removing directories for `#{dirloc}`."
+          fn(null, true)
+      else
         fn(null, true)
 
   ###*
@@ -161,6 +168,7 @@ class Files extends RedisObject
    * @return {String} The filename extension
   ###
   file_extension: (filename) =>
+    console.log filename
     ext = path.basename(filename||'').split('.')
     ext.shift()
     return ext.join('.')

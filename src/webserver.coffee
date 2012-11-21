@@ -267,7 +267,7 @@ class WebServer
     @app.get '/:user/:app/branches/:branch', (req, res, next) =>
       if @is_ios_useragent(req)
         res.header('Location', "./#{req.params.branch}/download")
-        res.send(302)
+        res.send(301)
         return next()
 
       user = new User({ name: req.params.user })
@@ -297,14 +297,14 @@ class WebServer
     @app.get '/:user/:app/tags/:tag/download', (req, res, next) =>
       tg = req.params.tag
       res.header('Location', "./download/#{tg}.plist")
-      res.send(302)
+      res.send(301)
       return next()
 
     # Download plist files for a tag
     @app.get '/:user/:app/branches/:branch/download', (req, res, next) =>
       br = req.params.branch
       res.header('Location', "./download/#{br}.plist")
-      res.send(302)
+      res.send(301)
       return next()
 
     # Download specific file for a branch

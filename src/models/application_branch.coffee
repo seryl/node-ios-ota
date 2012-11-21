@@ -70,7 +70,7 @@ class ApplicationBranch extends RedisObject
     @redis.srem(@branchlist_prefix(), branch)
     @files().delete_all (err, reply) =>
       @delete_directories branch, (err, reply) =>
-        fn(null)
+        fn(null, true)
 
   ###*
    * Deletes the branches for a given application.
@@ -100,7 +100,7 @@ class ApplicationBranch extends RedisObject
         fs.mkdir target, (err, made) =>
           if err
             @logger.error "Error setting up directories for `#{dirloc}`."
-            fn(err, made)
+          fn(err, made)
       else
         fn(null, false)
 
@@ -113,6 +113,7 @@ class ApplicationBranch extends RedisObject
     dirloc = [@user, @application, @object_name, branch].join('/')
     fs.rmdir [@config.get('repository'), dirloc].join('/'), (err) =>
       if err
+        console.log err
         @logger.error "Error removing directories for `#{dirloc}`."
       fn(null, true)
 

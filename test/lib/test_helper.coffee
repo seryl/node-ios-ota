@@ -1,7 +1,7 @@
 path = require 'path'
-os = require 'os'
 
-global.fs = require 'fs'
+global.fs = require 'fs.extra'
+global.os = require 'os'
 global.rimraf = require 'rimraf'
 
 global.chai = require 'chai'

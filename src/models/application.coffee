@@ -9,8 +9,8 @@ ApplicationTag = require './application_tag'
  * A helper for working with applications of a particular user.
 ###
 class Application extends RedisObject
-  constructor: (@user, application=null) ->
-    super application
+  constructor: (@user, app=null) ->
+    super app
     @object_name = 'application'
 
   ###*
@@ -40,7 +40,6 @@ class Application extends RedisObject
   ###
   all: (filter={}, fn) =>
     if typeof filter == "function" then fn = filter
-    @current = null
     @list (err, applications) =>
       if (filter.name and Object.keys(filter).length is 1) or err
         fn(err, applications)
@@ -98,7 +97,7 @@ class Application extends RedisObject
     @branches().delete_all (err, reply) =>
       @tags().delete_all (err, reply) =>
         @delete_directories application, (err, reply) =>
-          fn(null)
+          fn(null, true)
   ###*
    * Deletes every application for the user that currently exists.
    * @param {Function} (fn) The callback function

@@ -69,8 +69,8 @@ class ApplicationTag extends RedisObject
     @current = tag
     @redis.srem(@taglist_prefix(), tag)
     @files().delete_all (err, reply) =>
-      @delete_directories tag, (err, reply) =>
-        fn(null)
+      # @delete_directories tag, (err, reply) =>
+      fn(null, true)
 
   ###*
    * Deletes all of the tags for the current application.
@@ -100,7 +100,7 @@ class ApplicationTag extends RedisObject
         fs.mkdir target, (err, made) =>
           if err
             @logger.error "Error setting up directories for `#{dirloc}`."
-            fn(err, made)
+          fn(err, made)
       else
         fn(null, false)
 
