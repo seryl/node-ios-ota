@@ -15,12 +15,13 @@ task 'watch', 'Starts a watcher for the src/*.coffee files', ->
 task "test", "run tests", (options)->
   options.reporter or= "spec"
   exec "clear; NODE_ENV=test 
-    ./node_modules/.bin/mocha 
+    ./node_modules/.bin/mocha
     --compilers coffee:coffee-script
     --reporter #{options.reporter}
     --require coffee-script 
     --require test/lib/test_helper.coffee
     --colors
+    --globals key
   ", (err, output) ->
     throw err if err
     console.log output

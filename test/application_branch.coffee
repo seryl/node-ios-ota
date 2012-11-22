@@ -28,8 +28,8 @@ describe 'ApplicationBranch', ->
         app.save (err, reply) ->
           b_cp = os.tmpDir()
           dup_files = [
-            { location: b_cp, name: "master.ipa" },
-            { location: b_cp, name: "master.plist" }
+            { location: "#{b_cp}master.ipa", name: "master.ipa" },
+            { location: "#{b_cp}master.plist", name: "master.plist" }
           ]
 
           pfix = "#{__dirname}/fixtures"
@@ -102,8 +102,8 @@ describe 'ApplicationBranch', ->
           assert.ifError err
           files2 = branch2.files()
           dup_files = [
-            { location: b_cp, name: "master.ipa" },
-            { location: b_cp, name: "master.plist" }
+            { location: "#{b_cp}master.ipa",   name: "master.ipa" },
+            { location: "#{b_cp}master.plist", name: "master.plist" }
           ]
 
           pfix = "#{__dirname}/fixtures"

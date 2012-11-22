@@ -18,11 +18,11 @@
     "merge-recursive": "0.0.x",
     "mkdirp": "0.3.x",
     "mv": "0.0.x",
+    "rimraf": "2.0.x",
     "async": "0.1.x",
     "pkginfo": "0.2.x"
   },
   "devDependencies": {
-    "rimraf": "2.0.x",
     "fs.extra": "1.2.x",
     "needle": "0.4.x",
     "mocha": "1.6.x",

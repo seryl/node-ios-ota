@@ -291,7 +291,7 @@ class WebServer
     @app.del '/:user/:app/branches/:branch', (req, res, next) =>
       user = new User({ name: req.params.user })
       app = user.applications().build(req.params.app)
-      app.branches().delete 'master', (err, reply) =>
+      app.branches().delete req.params.branch, (err, reply) =>
         res.json 200, message: "successfully deleted `#{req.params.branch}`."
       return next()
 

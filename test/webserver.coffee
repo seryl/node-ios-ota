@@ -117,75 +117,95 @@ describe 'WebServer', ->
       assert.deepEqual data.files, []
       done()
 
-  # it "should be able to add/update a tag", (done) ->
-  #   d = { files: fix_files }
-  #   client.post "#{url}/test_user/example_app/tags/1.0", d,
-  #   { multipart: true }, (err, res, data) =>
-  #     # assert.ifError err
-  #     console.log data
-  #     # data["message"][0].name.should.equal "1.0"
-  #     done()
+  it "should be able to add/update a tag", (done) ->
+    cmp_files = [
+      { name: "1.0.plist", md5: "0a1b8472e01bc836acecd246347d4492" },
+      { name: "1.0.ipa",   md5: "8b64ea08254c85e69d65ee7294431e0a" }
+    ]
 
-  # it "should be able to add/update a branch", (done) ->
-  #   client.post '/test_user/example_app/branches/master',
-  #   {files: fix_files}, (err, req, res, data) ->
-  #     assert.ifError err
-  #     console.log data
-  #     # data.name.should.equal "master"
-  #     done()
+    d = { files: fix_files }
+    client.post "#{url}/test_user/example_app/tags/1.0", d,
+    { multipart: true, username: "admin", secret: "admin" },
+    (err, res, data) =>
+      assert.ifError err
+      ['1.0.plist', '1.0.ipa'].should.include data.files[0].name
+      ['1.0.plist', '1.0.ipa'].should.include data.files[1].name
+      done()
 
-  # it "should be able to delete a tag", (done) ->
-  #   client.post '/test_user/example_app/tags/1.0',
-  #   {files: fix_files}, (err, req, res, data) ->
-  #     assert.ifError err
-  #     data.name.should.equal "1.0"
-  #     client.get '/test_user/example_app/tags',
-  #     (err, req, res, data) ->
-  #       assert.ifError err
-  #       data.tags[0].should.equal "1.0"
-  #       client.del '/test_user/example_app/tags/1.0',
-  #       (err, req, res, data) ->
-  #         assert.ifError err
-  #         client.get '/test_user/example_app/tags',
-  #         (err, req, res, data) ->
-  #           assert.ifError err
-  #           assert.deepEqual data.tags, []
-  #           done()
+  it "should be able to add/update a branch", (done) ->
+    cmp_files = [
+      { name: "master.plist", md5: "0a1b8472e01bc836acecd246347d4492" },
+      { name: "master.ipa",   md5: "8b64ea08254c85e69d65ee7294431e0a" }
+    ]
 
-  # it "should be able to delete a branch", (done) ->
-  #   client.post '/test_user/example_app/branches/master',
-  #   {files: add_files}, (err, req, res, data) ->
-  #     assert.ifError err
-  #     data.name.should.equal "master"
-  #     client.get '/test_user/example_app/branches',
-  #     (err, req, res, data) ->
-  #       assert.ifError err
-  #       data.branches[0].should.equal "master"
-  #       client.del '/test_user/example_app/branches/master',
-  #       (err, req, res, data) ->
-  #         assert.ifError err
-  #         client.get '/test_user/example_app/branches',
-  #         (err, req, res, data) ->
-  #           assert.ifError err
-  #           assert.deepEqual data.branches, []
-  #           done()
+    d = { files: fix_files }
+    client.post "#{url}/test_user/example_app/branches/master", d,
+    { multipart: true, username: "admin", secret: "admin" },
+    (err, res, data) ->
+      assert.ifError err
+      ['master.plist', 'master.ipa'].should.include data.files[0].name
+      ['master.plist', 'master.ipa'].should.include data.files[1].name
+      done()
 
-  # it "should allow deletion of a user for the admin", (done) ->
-  #   client.get '/users', (err, req, res, data) ->
-  #     assert.ifError err
-  #     data.users.should.include 'silly_user'
-  #     data.users.should.include 'test_user'
+  it "should be able to delete a tag", (done) ->
+    d = { files: fix_files }
+    client.post "#{url}/test_user/example_app/tags/1.0", d,
+    { multipart: true, username: "admin", secret: "admin" },
+    (err, res, data) ->
+      assert.ifError err
+      ['1.0.plist', '1.0.ipa'].should.include data.files[0].name
+      ['1.0.plist', '1.0.ipa'].should.include data.files[1].name
+      client.get "#{url}/test_user/example_app/tags",
+      (err, res, data) ->
+        assert.ifError err
+        data.tags[0].should.equal "1.0"
+        client.delete "#{url}/test_user/example_app/tags",
+        (err, res, data) ->
+          assert.ifError err
+          client.get "#{url}/test_user/example_app/tags",
+          (err, res, data) ->
+            assert.ifError err
+            assert.deepEqual data.tags, []
+            done()
 
-  #     client.del '/users/test_user', (err, req, res, data) ->
-  #       assert.ifError err
-  #       client.get '/users', (err, req, res, data) ->
-  #         assert.ifError err
-  #         data.users.should.include 'silly_user'
-  #         data.users.should.not.include 'test_user'
+  it "should be able to delete a branch", (done) ->
+    d = { files: fix_files }
+    client.post "#{url}/test_user/example_app/branches/master", d,
+    { multipart: true, username: "admin", secret: "admin" },
+    (err, res, data) ->
+      assert.ifError err
+      ['master.plist', 'master.ipa'].should.include data.files[0].name
+      ['master.plist', 'master.ipa'].should.include data.files[1].name
+      client.get "#{url}/test_user/example_app/branches",
+      (err, res, data) ->
+        assert.ifError err
+        data.branches[0].should.equal "master"
+        client.delete "#{url}/test_user/example_app/branches/master",
+        (err, res, data) ->
+          assert.ifError err
+          client.get "#{url}/test_user/example_app/branches",
+          (err, res, data) ->
+            assert.ifError err
+            assert.deepEqual data.branches, []
+            done()
 
-  #         client.del '/users/silly_user', (err, req, res, data) ->
-  #           assert.ifError err
-  #           client.get '/users', (err, req, res, data) ->
-  #             assert.ifError err
-  #             assert.deepEqual data, { users: [] }
-  #             done()
+  it "should allow deletion of a user for the admin", (done) ->
+    client.get "#{url}/users", (err, res, data) ->
+      assert.ifError err
+      data.users.should.include 'silly_user'
+      data.users.should.include 'test_user'
+      done()
+
+      client.delete "#{url}/users/test_user", (err, res, data) ->
+        assert.ifError err
+        client.get "#{url}/users", (err, res, data) ->
+          assert.ifError err
+          data.users.should.include 'silly_user'
+          data.users.should.not.include 'test_user'
+
+          client.delete "#{url}/users/silly_user", (err, res, data) ->
+            assert.ifError err
+            client.get "#{url}/users", (err, res, data) ->
+              assert.ifError err
+              assert.deepEqual data, { users: [] }
+              done()

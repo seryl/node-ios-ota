@@ -10,7 +10,9 @@ class Logger extends Singleton
   ###*
    * At some point we're going to want to allow appenders here.
   ###
-  constructor: ->
+  constructor: (level='info') ->
+    unless level instanceof Array
+      level = Array(level)
     @logger = new winston.Logger
       transports: [
         new MixlibLog
