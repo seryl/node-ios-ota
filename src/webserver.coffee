@@ -223,6 +223,9 @@ class WebServer
             return { location: file.path, name: file.name }
 
           # TODO: Check whether or we need to update the files.
+          unless req.params.files
+            res.json 200, message: "ok"
+            return next()
           flist = [req.params.files[k] for k in Object.keys(req.params.files)]
           f_normal = [mapto_flist(f) for f in flist[0]][0]
           files = tag.files()
@@ -244,6 +247,9 @@ class WebServer
             return { location: file.path, name: file.name }
 
           # TODO: Check whether or we need to update the files.
+          unless req.params.files
+            res.json 200, message: "ok"
+            return next()
           flist = [req.params.files[k] for k in Object.keys(req.params.files)]
           f_normal = [mapto_flist(f) for f in flist[0]][0]
           files = branch.files()
