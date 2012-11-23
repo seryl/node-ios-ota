@@ -337,10 +337,14 @@ class WebServer
       app = user.applications().build(req.params.app)
       tags = app.tags().build(reqs.params.tag)
       target = branches.files().filepath(req.params.file)
+      if /plst$/.test req.params.file
+        ct = 'text/xml'
+      else
+        ct = 'application/octet-stream'
 
       fs.stat target, (err, reply) =>
         res.writeHead(200, {
-          'Content-Type': 'application/octet-stream',
+          'Content-Type': ct,
           'Content-Length': reply.size
         })
         readStream = fs.createReadStream(target)
