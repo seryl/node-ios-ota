@@ -337,7 +337,7 @@ class WebServer
       app = user.applications().build(req.params.app)
       tags = app.tags().build(reqs.params.tag)
       target = branches.files().filepath(req.params.file)
-      if /plst$/.test req.params.file
+      if /plist$/.test req.params.file
         ct = 'text/xml'
       else
         ct = 'application/octet-stream'
