@@ -67,7 +67,8 @@ describe 'Application', ->
       apps.build('crushinator').save (err, reply) =>
         apps.list (err, reply) =>
           assert.equal err, null
-          assert.deepEqual reply, ["crushinator", "brainslugs"]
+          reply.should.include 'crushinator'
+          reply.should.include 'brainslugs'
           apps.delete "brainslugs", (err, reply) =>
             fs.exists [
               config.get('repository'), "crushinator", "brainslugs"].join('/'),
@@ -85,7 +86,8 @@ describe 'Application', ->
         assert.equal err, null
         apps.list (err, reply) =>
           assert.equal err, null
-          assert.deepEqual reply, ['crushinator', 'brainslugs']
+          reply.should.include 'crushinator'
+          reply.should.include 'brainslugs'
           apps.delete_all (err, reply) =>
             apps.list (err, reply) =>
               assert.equal err, null
