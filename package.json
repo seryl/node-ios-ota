@@ -12,7 +12,7 @@
     "winston-mixlib-log": "0.0.x",
     "optimist": "0.3.x",
     "nconf": "0.6.x",
-    "restify":"1.4.x",
+    "express":"3.0.x",
     "redis": "0.8.x",
     "formidable": "1.0.x",
     "merge-recursive": "0.0.x",

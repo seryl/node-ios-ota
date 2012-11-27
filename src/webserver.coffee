@@ -1,5 +1,6 @@
 fs = require 'fs'
-restify = require 'restify'
+express = require 'express'
+http = require 'http'
 util = require 'util'
 require('pkginfo')(module, 'name', 'version')
 
@@ -7,6 +8,10 @@ Config = require './config'
 Logger = require './logger'
 {Identity, generate_identity} = require './identity'
 User = require './models/user'
+
+errorHandler = (err, req, res, next) ->
+  res.status 500
+  res.render 'error', error: err
 
 ###*
  * The iOS-ota webserver class.
@@ -16,11 +21,12 @@ class WebServer
     @config = Config.get()
     @logger = Logger.get()
     @identity = Identity.get()
-    @app = restify.createServer( name: exports.name )
-    @app.use(restify.authorizationParser());
-    @app.use(restify.bodyParser({ mapParams: true, maxBodySize: 0 }))
+    @app = express()
+    @app.use express.bodyParser()
+    @app.use errorHandler
     @setup_routing()
-    @app.listen(@config.get('port'))
+    @srv = http.createServer(@app)
+    @srv.listen(@config.get('port'))
     @logger.info "Webserver is up at: http://0.0.0.0:#{@config.get('port')}"
 
   # Sets up the webserver routing.
@@ -36,22 +42,19 @@ class WebServer
     @app.get '/help', (req, res, next) =>
       res.json 200
         message: "restdown docs coming soon."
-      return next()
 
     # Silence favicon requests.
     @app.get '/favicon.ico', (req, res, next) =>
-      next new restify.codeToHttpError(404, "No favicon exists.")
+      res.json 404, "No favicon exists."
 
     # Returns the current list of users.
     @app.get '/users', (req, res, next) =>
       user = new User
       user.list (err, userlist) =>
         if err
-          next new restify.codeToHttpError(500, "Error retrieving user list.")
-          return next()
+          res.json 500, "Error retrieving user list."
         res.json 200,
           users: userlist
-        return next()
 
     # Creates or updates a user. (Requires Auth)
     @app.post '/users/:user', (req, res, next) =>
@@ -70,25 +73,21 @@ class WebServer
             res.json 500,
               code: 500,
               message: reply.message
-          return next()
 
         if user.username == "admin"
           res.json 403,
             code: 403,
             message: "Unable to modify the administrative user."
-          return next()
 
         if !reply.admin
           res.json 401,
             code: 401,
             message: "Only administrators are permitted to modify accounts."
-          return next()
 
         user = new User({ name: req.params.user })
         user.save (err, reply) =>
           res.json 200, reply
-          return next()
-
+      
       @authenticate_with_self_admin(req, handle_auth_response, user)
 
     # Returns the user-specific info.
@@ -103,7 +102,6 @@ class WebServer
             location: location
             user: username
             message: "Error retrieving info for user `#{username}`."
-          return next()
 
         if !user_resp
           res.json 404,
@@ -111,7 +109,6 @@ class WebServer
             location: location
             user: username
             message: "The user `#{username}` does not exist."
-          return next()
 
         user.applications().list (err, reply) =>
           if err
@@ -120,33 +117,24 @@ class WebServer
               location: location
               user: username
               message: "Error retrieving apps for user `#{username}`."
-            return next()
 
           res.json 200
             user: username
             location: location
             applications: reply
-          return next()
 
-    # Deletes a user. (Requires Auth)
-    # 
-    # NOTE: Currently this does not use authentication at all.
-    #       Restify doesn't parse body parameters with delete requests yet.
-    #
-    #       https://github.com/mcavage/node-restify/issues/180
+    # Deletes a user.
     @app.del '/users/:user', (req, res, next) =>
       target = req.params.user
       if target in ["admin"]
         res.json 403,
           code: 403
           message: "Unable to modify internal services."
-        return next()
 
       user = new User()
-      user.delete(target, (err, reply) =>
+      user.delete target, (err, reply) =>
         res.json 200,
           message: "Successfully deleted user `#{target}`."
-        return next())
 
     # Creates a new application for a user.
     @app.put '/:user/:app', (req, res, next) =>
@@ -154,7 +142,6 @@ class WebServer
       user.applications().build(req.params.app).save (err, reply) =>
         res.json 200
           message: "Successfully updated application `#{req.params.app}`."
-        return next()
 
     # Returns the list of branches/tags for a specific app.
     @app.get '/:user/:app', (req, res, next) =>
@@ -171,7 +158,6 @@ class WebServer
             app: req.params.app
             location: loc
             message: "The application `#{req.params.app}` does not exist."
-          return next()
 
         res.json 200,
           user: req.params.user
@@ -179,7 +165,6 @@ class WebServer
           location: loc
           branches: reply.branches
           tags: reply.tags
-        return next()
 
     # Lists all of the branches for a specified user/application.
     @app.get '/:user/:app/branches', (req, res, next) =>
@@ -193,7 +178,6 @@ class WebServer
         res.json 200,
           name: loc
           branches: reply
-        return next()
 
     # Lists all of the tags for a specified user/application.
     @app.get '/:user/:app/tags', (req, res, next) =>
@@ -207,7 +191,6 @@ class WebServer
         res.json 200,
           name: loc
           tags: reply
-        return next()
 
     # Creates or  a new tag
     @app.post '/:user/:app/tags/:tag', (req, res, next) =>
@@ -217,7 +200,6 @@ class WebServer
       tag.save (err, reply) =>
         if typeof req.params.files == undefined
           res.json 200, name: reply
-          return next()
         else
           mapto_flist = (file) =>
             return { location: file.path, name: file.name }
@@ -225,13 +207,11 @@ class WebServer
           # TODO: Check whether or we need to update the files.
           unless req.params.files
             res.json 200, message: "ok"
-            return next()
           flist = [req.params.files[k] for k in Object.keys(req.params.files)]
           f_normal = [mapto_flist(f) for f in flist[0]][0]
           files = tag.files()
           files.save f_normal, (err, reply) =>
             res.json 200, files: reply
-            return next()
 
     # Creates or updates a branch re-updating files if they are passed.
     @app.post '/:user/:app/branches/:branch', (req, res, next) =>
@@ -241,7 +221,6 @@ class WebServer
       branch.save (err, reply) =>
         if typeof req.params.files == undefined
           res.json 200, name: reply
-          return next()
         else
           mapto_flist = (file) =>
             return { location: file.path, name: file.name }
@@ -249,41 +228,33 @@ class WebServer
           # TODO: Check whether or we need to update the files.
           unless req.params.files
             res.json 200, message: "ok"
-            return next()
           flist = [req.params.files[k] for k in Object.keys(req.params.files)]
           f_normal = [mapto_flist(f) for f in flist[0]][0]
           files = branch.files()
           files.save f_normal, (err, reply) =>
             res.json 200, files: reply
-            return next()
 
     # Shows the tag info for a specified user/application/tag
     @app.get '/:user/:app/tags/:tag', (req, res, next) =>
       if @is_ios_useragent(req)
-        res.header('Location', "./#{req.params.tag}/download")
-        res.send(302)
-        return next()
+        res.redirect(302, "./#{req.params.tag}/download")
 
       user = new User({ name: req.params.user })
       app = user.applications().build(req.params.app)
       tag = app.tags().build(req.params.tag)
       tag.find req.params.tag, (err, reply) =>
         res.json 200, reply
-        return next()
 
     # Shows the branch info for a specified user/application/branch
     @app.get '/:user/:app/branches/:branch', (req, res, next) =>
       if @is_ios_useragent(req)
-        res.header('Location', "./#{req.params.branch}/download")
-        res.send(301)
-        return next()
+        res.redirect(301, "./#{req.params.branch}/download")
 
       user = new User({ name: req.params.user })
       app = user.applications().build(req.params.app)
       branch = app.branches().build(req.params.branch)
       branch.find req.params.branch, (err, reply) =>
         res.json 200, reply
-        return next()
 
     # Deletes a tag
     @app.del '/:user/:app/tags/:tag', (req, res, next) =>
@@ -291,7 +262,6 @@ class WebServer
       app = user.applications().build(req.params.app)
       app.tags().delete req.params.tag, (err, reply) =>
         res.json 200, message: "successfully deleted `#{req.params.tag}`."
-        return next()
 
     # Deletes a branch
     @app.del '/:user/:app/branches/:branch', (req, res, next) =>
@@ -299,21 +269,16 @@ class WebServer
       app = user.applications().build(req.params.app)
       app.branches().delete req.params.branch, (err, reply) =>
         res.json 200, message: "successfully deleted `#{req.params.branch}`."
-      return next()
 
     # Download plist files for a branch
     @app.get '/:user/:app/tags/:tag/download', (req, res, next) =>
       tg = req.params.tag
-      res.header('Location', "./download/#{tg}.plist")
-      res.send(301)
-      return next()
+      res.redirect(301, "./download/#{tg}.plist")
 
     # Download plist files for a tag
     @app.get '/:user/:app/branches/:branch/download', (req, res, next) =>
       br = req.params.branch
-      res.header('Location', "./download/#{br}.plist")
-      res.send(301)
-      return next()
+      res.redirect(301, "./download/#{br}.plist")
 
     # Download specific file for a branch
     @app.get '/:user/:app/branches/:branch/download/:file', (req, res, next) =>
@@ -357,7 +322,7 @@ class WebServer
 
   ###*
    * Check what the user-agent is an iPhone or iPad.
-   * @params {Object} (req) The restify request object
+   * @params {Object} (req) The express request object
    * @return {Boolean} Whether or not the user-agent is an iphone/ipad
   ###
   is_ios_useragent: (req) =>
@@ -365,13 +330,11 @@ class WebServer
     return (req.headers['user-agent'].match(ua_regex) != null)
 
   redirect_to_plist: (req, res, next) =>
-    res.header('Location', '/')
-    res.send(302);
-    return next(false);
+    res.redirect(302, '/')
 
   ###*
    * Authenticates the user.
-   * @param {Object} (req) The restify request object
+   * @param {Object} (req) The express request object
    * @param {Function} (fn) The callback function
   ###
   authenticate: (req, fn) =>
@@ -418,7 +381,7 @@ class WebServer
 
   ###*
    * Authenticates the user, and if the user is managing themselves, elevate.
-   * @param {Object} (req) The restify request object
+   * @param {Object} (req) The express request object
    * @param {Function} (fn) The callback function
    * @param {String} (user) The user to test against for elevated privs
   ###
