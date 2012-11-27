@@ -14,7 +14,6 @@
     "nconf": "0.6.x",
     "express":"3.0.x",
     "redis": "0.8.x",
-    "formidable": "1.0.x",
     "merge-recursive": "0.0.x",
     "mkdirp": "0.3.x",
     "mv": "0.0.x",
