@@ -8,6 +8,10 @@ crypto = require 'crypto'
 ###
 filemd5 = (filepath, cb) ->
   fs.readFile filepath, 'binary', (err, data) ->
-    cb(err, crypto.createHash('md5').update(data).digest('hex'))
+    if err
+      console.log err
+      cb(err, "lame")
+    else
+      cb(err, crypto.createHash('md5').update(data).digest('hex'))
 
 module.exports = filemd5

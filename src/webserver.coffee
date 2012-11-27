@@ -1,7 +1,7 @@
 fs = require 'fs'
 express = require 'express'
 http = require 'http'
-util = require 'util'
+qs = require 'qs'
 require('pkginfo')(module, 'name', 'version')
 
 Config = require './config'
@@ -22,7 +22,11 @@ class WebServer
     @logger = Logger.get()
     @identity = Identity.get()
     @app = express()
-    @app.use express.bodyParser()
+    @app.configure
+
+    @app.use express.bodyParser
+      uploadDir: '/tmp',
+      keepExtensions: false
     @app.use errorHandler
     @setup_routing()
     @srv = http.createServer(@app)
@@ -198,16 +202,16 @@ class WebServer
       app = user.applications().build(req.params.app)
       tag = app.tags().build(req.params.tag)
       tag.save (err, reply) =>
-        if typeof req.params.files == undefined
+        if typeof req.files.files == undefined
           res.json 200, name: reply
         else
           mapto_flist = (file) =>
             return { location: file.path, name: file.name }
 
           # TODO: Check whether or we need to update the files.
-          unless req.params.files
+          unless req.files.files
             res.json 200, message: "ok"
-          flist = [req.params.files[k] for k in Object.keys(req.params.files)]
+          flist = [req.files.files[k] for k in Object.keys(req.files.files)]
           f_normal = [mapto_flist(f) for f in flist[0]][0]
           files = tag.files()
           files.save f_normal, (err, reply) =>
@@ -219,16 +223,16 @@ class WebServer
       app = user.applications().build(req.params.app)
       branch = app.branches().build(req.params.branch)
       branch.save (err, reply) =>
-        if typeof req.params.files == undefined
+        if typeof req.files.files == undefined
           res.json 200, name: reply
         else
           mapto_flist = (file) =>
             return { location: file.path, name: file.name }
 
           # TODO: Check whether or we need to update the files.
-          unless req.params.files
+          unless req.files.files
             res.json 200, message: "ok"
-          flist = [req.params.files[k] for k in Object.keys(req.params.files)]
+          flist = [req.files.files[k] for k in Object.keys(req.files.files)]
           f_normal = [mapto_flist(f) for f in flist[0]][0]
           files = branch.files()
           files.save f_normal, (err, reply) =>
@@ -296,8 +300,8 @@ class WebServer
           'Content-Type': ct,
           'Content-Length': reply.size
         })
-        readStream = fs.createReadStream(target)
-        util.pump(readStream, res)
+        readStream = fs.createReadStream(target
+        , bufferSize: 4 * 1024).pipe(res)
         return next()
 
     # Download specific file for a tag
@@ -316,8 +320,8 @@ class WebServer
           'Content-Type': ct,
           'Content-Length': reply.size
         })
-        readStream = fs.createReadStream(target)
-        util.pump(readStream, res)
+        readStream = fs.createReadStream(target
+        , bufferSize: 4 * 1024).pipe(res)
         return next()
 
   ###*
@@ -340,8 +344,8 @@ class WebServer
   authenticate: (req, fn) =>
     err = false
     credentials =
-      username: req.params.username
-      secret: req.params.secret
+      username: req.body.username
+      secret: req.body.secret
 
     if !credentials.username
       err = true
@@ -387,8 +391,8 @@ class WebServer
   ###
   authenticate_with_self_admin: (req, fn, user) =>
     credentials =
-      username: req.params.username
-      secret: req.params.secret
+      username: req.body.username
+      secret: req.body.secret
 
     @authenticate req, (err, reply) =>
       if credentials.username == user then reply.admin = true

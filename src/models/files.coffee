@@ -1,8 +1,9 @@
 path = require 'path'
 fs = require 'fs'
 async = require 'async'
-mv = require 'mv'
+mkdirp = require 'mkdirp'
 rimraf = require 'rimraf'
+mv = require 'mv'
 
 RedisObject = require './redis_object'
 filemd5 = require '../filemd5'
@@ -88,9 +89,10 @@ class Files extends RedisObject
     flist = []
     async.map files, @setup_file, (err, reply) =>
       for f in reply
-        filemap.push f.name
-        filemap.push f.md5
-        flist.push { name: f.name, md5: f.md5 }
+        if f.name
+          filemap.push f.name
+          filemap.push f.md5
+          flist.push { name: f.name, md5: f.md5 }
 
       @redis.hmset.apply(@redis, filemap)
       fn(null, flist)
@@ -136,11 +138,16 @@ class Files extends RedisObject
     dirloc = [@user, @application, @dtype, @current].join('/')
     target_loc = [@config.get('repository'), dirloc, fname].join('/')
 
-    mv path.normalize(file.location), target_loc, (err) =>
-      filemd5 target_loc, (err, data) =>
-        if err
-          @logger.error "Error setting up files for `#{target_loc}`."
-        fn(err, { name: fname, md5: data })
+    mkdirp [@config.get('repository'), dirloc].join('/'), (err, made) =>
+      if err
+        @logger.error "Error setting up directories for `#{@current}`."
+
+      mv path.normalize(file.location), target_loc, (err) =>
+        unless err
+          filemd5 target_loc, (err, data) =>
+            if err
+              @logger.error "Error setting up files for `#{target_loc}`."
+            fn(err, { name: fname, md5: data })
 
   ###*
    * Deletes the files for the current leaf.
