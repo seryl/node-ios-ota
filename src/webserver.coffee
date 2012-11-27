@@ -1,7 +1,6 @@
 fs = require 'fs'
 express = require 'express'
 http = require 'http'
-qs = require 'qs'
 require('pkginfo')(module, 'name', 'version')
 
 Config = require './config'
