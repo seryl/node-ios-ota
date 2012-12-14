@@ -5,57 +5,71 @@ A node-based iOS over-the-air service.
 
 ## REST Interface
 
-<table>
-  <tr>
-    <th>Command</th><th>Method</th><th>Url</th><th>Example</th>
-  </tr>
-  <tr>
-    <td>version</td>
-    <td>GET</td>
-    <td>/</td>
-    <td>curl -sL localhost:3000/</td>
-  </tr>
-  <tr>
-    <td>list users</td>
-    <td>GET</td>
-    <td>/users/</td>
-    <td>curl -sL localhost:3000/users</td>
-  </tr>
-  <tr>
-    <td>create user</td>
-    <td>POST</td>
-    <td>/users/<code>user</code></td>
-    <td>curl -sL -H "Content-Type: application/json" -X POST localhost:3000/users/<code>user</code> -d '{"username":"admin","secret":"admin"}'</td>
-  </tr>
-  <tr>
-    <td>create application</td>
-    <td>PUT</td>
-    <td>/<code>user</code>/<code>application</code></td>
-    <td>curl -sL -H "Content-Type: application/json" -X PUT localhost:3000/<code>user</code>/<code>application</code> -d '{"username":"admin","secret":"admin"}'</td>
-  </tr>
-  <tr>
-    <td>create a branch</td>
-    <td>POST</td>
-    <td>/<code>user</code>/<code>application</code>/branches/<code>branch</code></td>
-    <td>curl -sL -H "Content-Type: application/json" -X PUT localhost:3000/<code>user</code>/<code>application</code>/branches/<code>branch</code></td>
-  </tr>
-  <tr>
-    <td>create a tag</td>
-    <td>POST</td>
-    <td>/<code>user</code>/<code>application</code>/tags/<code>tag</code></code></td>
-    <td>curl -sL -H "Content-Type: application/json" -X PUT localhost:3000/<code>user</code>/<code>application</code>/tags/<code>tag</code></td>
-  </tr>
-  <tr>
-    <td>upload files for a branch/tag</td>
-    <td>POST</td>
-    <td>
-      /<code>user</code>/<code>application</code>/branches/<code>branch</code>
-      <br />OR<br />
-      /<code>user</code>/<code>application</code>/tags/<code>tag</code>
-    </td>
-    <td>curl -sL -H "Content-Type: application/json" -X PUT localhost:3000/<code>user</code>/<code>application</code> -d '{"username":"admin","secret":"admin"}'</td>
-  </tr>
-</table>
+Get the version
+```
+curl -sL localhost:3000
+```
+
+Get the list of users
+```
+curl -sL localhost:3000/users
+```
+
+Create a user
+```
+curl -sL -H "Content-Type: application/json" -X POST localhost:3000/users/zoidberg -d '
+{
+  "username": "admin",
+  "secret": "admin"
+}'
+```
+
+Create an application
+```
+curl -sL -H "Content-Type: application/json" -X PUT localhost:3000/zoidberg/brainslugs -d '
+{
+  "username": "admin",
+  "secret": "admin"
+}'
+```
+
+Creating a branch
+```
+curl -sL -H "Content-Type: application/json" -X PUT localhost:3000/zoidberg/brainslugs/branches/master
+{
+  "username": "admin",
+  "secret": "admin"
+}'
+```
+
+Creating a tag
+```
+curl -sL -H "Content-Type: application/json" -X PUT localhost:3000/zoidberg/brainslugs/tags/1.0
+{
+  "username": "admin",
+  "secret": "admin"
+}'
+```
+
+Upload files to a branch
+```
+curl -sL -H "Content-Type: application/json" -X PUT -T @filename.ipa \
+localhost:3000/zoidberg/brainslugs/branches/master -d '
+{
+  "username": "admin",
+  "secret": "admin"
+}'
+```
+
+Upload files to a tag
+```
+curl -sL -H "Content-Type: application/json" -X PUT -T @filename.ipa \
+localhost:3000/zoidberg/brainslugs/tags/1.0 -d '
+{
+  "username": "admin",
+  "secret": "admin"
+}'
+```
 
 ## Code Status
 
