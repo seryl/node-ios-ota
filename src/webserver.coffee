@@ -201,16 +201,13 @@ class WebServer
       app = user.applications().build(req.params.app)
       tag = app.tags().build(req.params.tag)
       tag.save (err, reply) =>
-        if typeof req.files.files == undefined
+        if typeof req.files == undefined
           res.json 200, name: reply
         else
           mapto_flist = (file) =>
             return { location: file.path, name: file.name }
 
-          # TODO: Check whether or we need to update the files.
-          unless req.files.files
-            res.json 200, message: "ok"
-          flist = [req.files.files[k] for k in Object.keys(req.files.files)]
+          flist = [req.files[k] for k in Object.keys(req.files)]
           f_normal = [mapto_flist(f) for f in flist[0]][0]
           files = tag.files()
           files.save f_normal, (err, reply) =>
@@ -222,16 +219,16 @@ class WebServer
       app = user.applications().build(req.params.app)
       branch = app.branches().build(req.params.branch)
       branch.save (err, reply) =>
-        if typeof req.files.files == undefined
+        if typeof req.files == undefined
           res.json 200, name: reply
         else
           mapto_flist = (file) =>
             return { location: file.path, name: file.name }
 
           # TODO: Check whether or we need to update the files.
-          unless req.files.files
+          unless req.files
             res.json 200, message: "ok"
-          flist = [req.files.files[k] for k in Object.keys(req.files.files)]
+          flist = [req.files[k] for k in Object.keys(req.files)]
           f_normal = [mapto_flist(f) for f in flist[0]][0]
           files = branch.files()
           files.save f_normal, (err, reply) =>
@@ -330,7 +327,10 @@ class WebServer
   ###
   is_ios_useragent: (req) =>
     ua_regex = /[iI][pP](hone|ad)/
-    return (req.headers['user-agent'].match(ua_regex) != null)
+    if req.headers.hasOwnProperty('user-agent')
+      return (req.headers['user-agent'].match(ua_regex) != null)
+    else
+      return null
 
   redirect_to_plist: (req, res, next) =>
     res.redirect(302, '/')
