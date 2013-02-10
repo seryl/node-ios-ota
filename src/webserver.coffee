@@ -298,7 +298,6 @@ class WebServer
         })
         readStream = fs.createReadStream(target
         , bufferSize: 4 * 1024).pipe(res)
-        return next()
 
     # Download specific file for a tag
     @app.get '/:user/:app/tags/:tag/download/:file', (req, res, next) =>
@@ -318,7 +317,6 @@ class WebServer
         })
         readStream = fs.createReadStream(target
         , bufferSize: 4 * 1024).pipe(res)
-        return next()
 
   ###*
    * Check what the user-agent is an iPhone or iPad.
