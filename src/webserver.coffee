@@ -237,7 +237,7 @@ class WebServer
     # Shows the tag info for a specified user/application/tag
     @app.get '/:user/:app/tags/:tag', (req, res, next) =>
       if @is_ios_useragent(req)
-        res.redirect(302, "./#{req.params.tag}/download")
+        res.redirect(302, "download")
 
       user = new User({ name: req.params.user })
       app = user.applications().build(req.params.app)
@@ -248,7 +248,7 @@ class WebServer
     # Shows the branch info for a specified user/application/branch
     @app.get '/:user/:app/branches/:branch', (req, res, next) =>
       if @is_ios_useragent(req)
-        res.redirect(301, "./#{req.params.branch}/download")
+        res.redirect(301, "download")
 
       user = new User({ name: req.params.user })
       app = user.applications().build(req.params.app)
