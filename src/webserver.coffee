@@ -237,7 +237,7 @@ class WebServer
     # Shows the tag info for a specified user/application/tag
     @app.get '/:user/:app/tags/:tag', (req, res, next) =>
       if @is_ios_useragent(req)
-        res.redirect(302, "./download")
+        res.redirect(302, "download")
 
       user = new User({ name: req.params.user })
       app = user.applications().build(req.params.app)
@@ -248,7 +248,7 @@ class WebServer
     # Shows the branch info for a specified user/application/branch
     @app.get '/:user/:app/branches/:branch', (req, res, next) =>
       if @is_ios_useragent(req)
-        res.redirect(302, "./download")
+        res.redirect(302, "download")
 
       user = new User({ name: req.params.user })
       app = user.applications().build(req.params.app)
@@ -273,12 +273,12 @@ class WebServer
     # Download plist files for a branch
     @app.get '/:user/:app/tags/:tag/download', (req, res, next) =>
       tg = req.params.tag
-      res.redirect(301, "./#{tg}.plist")
+      res.redirect(301, "#{tg}.plist")
 
     # Download plist files for a tag
     @app.get '/:user/:app/branches/:branch/download', (req, res, next) =>
       br = req.params.branch
-      res.redirect(301, "./#{br}.plist")
+      res.redirect(301, "#{br}.plist")
 
     # Download specific file for a branch
     @app.get '/:user/:app/branches/:branch/download/:file', (req, res, next) =>

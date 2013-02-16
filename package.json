@@ -1,6 +1,6 @@
 {
   "name":"ios-ota",
-  "version":"0.1.6",
+  "version":"0.1.7",
   "description": "A node-based iOS over-the-air service",
   "author": "Josh Toft <joshtoft@gmail.com>",
   "repository": {
@@ -12,7 +12,7 @@
     "winston-mixlib-log": "0.0.x",
     "optimist": "0.3.x",
     "nconf": "0.6.x",
-    "express":"3.0.x",
+    "express":"3.1.x",
     "redis": "0.8.x",
     "merge-recursive": "0.0.x",
     "mkdirp": "0.3.x",
