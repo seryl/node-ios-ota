@@ -49,6 +49,11 @@ class CLI
       .describe('p', 'Run the api server on the given port')
       .default('p', 3000)
 
+      # automatic branch archiving
+      .alias('R', 'archive')
+      .describe('R', 'Enable automatic archiving based on the bundle-version')
+      .default('R', true)
+
       # help
       .alias('h', 'help')
       .describe('h', 'Shows this message')
