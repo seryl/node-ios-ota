@@ -104,7 +104,7 @@ class Application extends RedisObject
   ###
   delete_all: (fn) =>
     @list (err, applications) =>
-      async.forEach(applications, @delete, fn)
+      async.each(applications, @delete, fn)
 
   ###*
    * Returns the list of branches for the current application.

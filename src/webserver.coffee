@@ -1,6 +1,8 @@
-fs = require 'fs'
+fs = require 'fs.extra'
 express = require 'express'
 http = require 'http'
+plist = require 'plist'
+async = require 'async'
 require('pkginfo')(module, 'name', 'version')
 
 Config = require './config'
@@ -195,7 +197,7 @@ class WebServer
           name: loc
           tags: reply
 
-    # Creates or  a new tag
+    # Creates or updates a new tag
     @app.post '/:user/:app/tags/:tag', (req, res, next) =>
       user = new User({ name: req.params.user })
       app = user.applications().build(req.params.app)
@@ -230,9 +232,58 @@ class WebServer
             res.json 200, message: "ok"
           flist = [req.files[k] for k in Object.keys(req.files)]
           f_normal = [mapto_flist(f) for f in flist[0]][0]
-          files = branch.files()
-          files.save f_normal, (err, reply) =>
-            res.json 200, files: reply
+
+          return_files = () =>
+            files = branch.files()
+            files.save f_normal, (err, reply) =>
+              res.json 200, files: reply
+
+          # Check for automatic branch archiving
+          if @config.get('archive')
+            plist_file = (f_normal.filter (X) -> /\.plist/.test X['name']).pop()
+            @plist_bundle_version plist_file['location']
+            , (err, ref) =>
+              copy_archive_file = (location_map, fn) =>
+                loc = location_map['location']
+                new_loc = "#{loc}_archive#{ref}"
+                fs.copy loc, new_loc, (err) =>
+                  location_map['location'] = new_loc
+
+                  name_match = location_map['name'].match(/(\S+)\.(ipa|plist)/)
+                  new_name = "#{ref}.#{name_match[2]}"
+                  location_map['name'] = new_name
+                  fn(err, location_map)
+
+              async.map f_normal, copy_archive_file, (err, results) =>
+                return_files()
+          else
+            return_files()
+
+    # Creates or updates an archive re-updating files if they are passed.
+    @app.post '/:user/:app/branches/:branch/archives/:ref', (req, res, next) =>
+      user = new User({ name: req.params.user })
+      app = user.applications().build(req.params.app)
+      branch = app.branches().build(req.params.branch)
+      archive = branch.archives().build(req.params.ref)
+      archive.save (err, reply) =>
+        if typeof req.files == undefined
+          res.json 200, name: reply
+        else
+          mapto_flist = (file) =>
+            return { location: file.path, name: file.name }
+
+          # TODO: Check whether or we need to update the files.
+          unless req.files
+            res.json 200, message: "ok"
+          flist = [req.files[k] for k in Object.keys(req.files)]
+          f_normal = [mapto_flist(f) for f in flist[0]][0]
+
+          # Update plist to point to archives
+          plist_file = (f_normal.filter (X) -> /\.plist/.test X['name']).pop()
+          @archive_plist_update plist_file['location'], (err, data) =>
+            files = archive.files()
+            files.save f_normal, (err, reply) =>
+              res.json 200, files: reply
 
     # Shows the tag info for a specified user/application/tag
     @app.get '/:user/:app/tags/:tag', (req, res, next) =>
@@ -258,6 +309,21 @@ class WebServer
       branch.find req.params.branch, (err, reply) =>
         res.json 200, reply
 
+    # List all of the archives for a specific branch.
+    @app.get '/:user/:app/branches/:branch/archives', (req, res, next) =>
+      location = [
+        req.params.user, req.params.app, 'branches',
+        req.params.branch, 'archives']
+      loc = location.join('/')
+      user = new User({ name: req.params.user })
+      app = user.applications().build(req.params.app)
+      branch = app.branches().build(req.params.branch)
+      archives = branch.archives()
+      archives.list (err, reply) =>
+        res.json 200,
+          name: loc
+          archives: reply
+
     # Deletes a tag
     @app.del '/:user/:app/tags/:tag', (req, res, next) =>
       user = new User({ name: req.params.user })
@@ -272,6 +338,15 @@ class WebServer
       app.branches().delete req.params.branch, (err, reply) =>
         res.json 200, message: "successfully deleted `#{req.params.branch}`."
 
+    # Deletes an archive
+    @app.del '/:user/:app/branches/:branch/archives/:ref', (req, res, next) =>
+      user = new User({ name: req.params.user })
+      app = user.applications().build(req.params.app)
+      branch = app.branches().build(req.params.branch)
+      archives = branch.archives().build(req.params.ref)
+      archives.delete req.params.ref, (err, reply) =>
+        res.json 200, message: "successfully deleted `#{req.params.ref}`."
+
     # Download plist files for a branch
     @app.get '/:user/:app/tags/:tag/download', (req, res, next) =>
       rel_url = "#{req.params.user}/#{req.params.app}/tags/#{req.params.tag}/download"
@@ -283,6 +358,12 @@ class WebServer
       rel_url = "#{req.params.user}/#{req.params.app}/branches/#{req.params.branch}/download"
       br = req.params.branch
       res.redirect(301, "#{rel_url}/#{br}.plist")
+
+    # Download plist files for an archive
+    @app.get '/:user/:app/branches/:branch/archives/:ref/download', (req, res, next) =>
+      rel_url = "#{req.params.user}/#{req.params.app}/branches/#{req.params.branch}/archives/#{req.params.ref}/download"
+      ref = req.params.ref
+      res.redirect(301, "#{rel_url}/#{ref}.plist")
 
     # Download specific file for a branch
     @app.get '/:user/:app/branches/:branch/download/:file', (req, res, next) =>
@@ -309,6 +390,27 @@ class WebServer
       app = user.applications().build(req.params.app)
       tags = app.tags().build(reqs.params.tag)
       target = branches.files().filepath(req.params.file)
+      if /plist$/.test req.params.file
+        ct = 'text/xml'
+      else
+        ct = 'application/octet-stream'
+
+      fs.stat target, (err, reply) =>
+        res.writeHead(200, {
+          'Content-Type': ct,
+          'Content-Length': reply.size
+        })
+        readStream = fs.createReadStream(target
+        , bufferSize: 4 * 1024).pipe(res)
+
+    # Download specific file for an archive
+    @app.get '/:user/:app/branches/:branch/archives/:ref/download/:file'
+    , (req, res, next) =>
+      user = new User({ name: req.params.user })
+      app = user.applications().build(req.params.app)
+      branch = app.branches().build(req.params.branch)
+      archives = branch.archives().build(req.params.ref)
+      target = archives.files().filepath(req.params.file)
       if /plist$/.test req.params.file
         ct = 'text/xml'
       else
@@ -398,5 +500,35 @@ class WebServer
     @authenticate req, (err, reply) =>
       if credentials.username == user then reply.admin = true
       return fn(err, reply)
+
+  ###*
+   * Retrieve plist bundle-version.
+   * @param {String}   (location) The location of the plist
+   * @param {Function} (fn) The callback function
+  ###
+  plist_bundle_version: (location, fn) =>
+    fs.readFile location, (err, data) =>
+      pdata = plist.parseStringSync(data.toString())
+      ref = pdata.items[0].metadata['bundle-version']
+      fn(err, ref)
+
+  ###*
+   * Takes a given plist and forces the download url to point to archives.
+   * @param {String}   (location) The location of the plist to modify
+   * @param {Function} (fn) The callback function
+  ###
+  archive_plist_update: (location, fn) =>
+    fs.readFile location, (err, data) =>
+      pdata = plist.parseStringSync(data.toString())
+      ref = pdata.items[0].metadata['bundle-version']
+      url = pdata.items[0].assets[0].url
+      ipa_match = url.match(/\/download\/(\S+)\.ipa/)
+
+      pdata.items[0].assets[0]['url'] = url.replace(
+        "/download/#{ipa_match[1]}.ipa", "/archives/#{ref}/download/#{ref}.ipa")
+
+      updated_pdata = plist.build(pdata).toString()
+      fs.writeFile location, updated_pdata, (err) =>
+        fn(err, updated_pdata)
 
 module.exports = WebServer

@@ -80,7 +80,7 @@ class ApplicationBranch extends RedisObject
   ###
   delete_all: (fn) =>
     @list (err, branchlist) =>
-      async.forEach(branchlist, @delete, fn)
+      async.each(branchlist, @delete, fn)
 
   ###*
    * Returns the list of files for the current branch.

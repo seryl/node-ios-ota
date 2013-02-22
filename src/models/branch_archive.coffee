@@ -78,7 +78,7 @@ class BranchArchive extends RedisObject
   ###
   delete_all: (fn) =>
     @list (err, archivelist) =>
-      async.forEach(archivelist, @delete, fn)
+      async.each(archivelist, @delete, fn)
 
   ###*
    * Returns the list of files for the current branch.
@@ -110,7 +110,7 @@ class BranchArchive extends RedisObject
    * @param {Function} (fn) The callback function
   ###
   delete_directories: (ref, fn) =>
-    dirloc = [@user, @application, @branch, @object_name, ref].join('/')
+    dirloc = [@user, @application, "branches", @branch, @object_name, ref].join('/')
     fs.rmdir [@config.get('repository'), dirloc].join('/'), (err) =>
       if err
         @logger.error "Error removing directories for `#{dirloc}`."

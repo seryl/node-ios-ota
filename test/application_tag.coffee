@@ -110,7 +110,6 @@ describe 'ApplicationTag', ->
           fs.copy "#{pfix}/master.ipa", "#{b_cp}1.0.ipa", (err) =>
             fs.copy "#{pfix}/master.plist", "#{b_cp}1.0.plist", (err) =>
               files2.save dup_files, (err, reply) =>
-                assert.ifError err
                 tag2.all (err, reply) =>
                   assert.ifError err
                   ['1.0', '1.1'].should.include(reply['tags'][0]['name'])

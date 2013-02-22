@@ -1,6 +1,6 @@
 {
   "name":"ios-ota",
-  "version":"0.1.10",
+  "version":"0.1.11",
   "description": "A node-based iOS over-the-air service",
   "author": "Josh Toft <joshtoft@gmail.com>",
   "repository": {
@@ -15,14 +15,15 @@
     "express":"3.1.x",
     "redis": "0.8.x",
     "merge-recursive": "0.0.x",
+    "plist": "git://github.com/NessComputing/node-plist.git",
     "mkdirp": "0.3.x",
+    "fs.extra": "1.2.x",
     "mv": "0.0.x",
     "rimraf": "2.0.x",
-    "async": "0.1.x",
+    "async": "0.2.x",
     "pkginfo": "0.2.x"
   },
   "devDependencies": {
-    "fs.extra": "1.2.x",
     "request": "2.12.x",
     "form-data": "0.0.x",
     "mocha": "1.6.x",

@@ -9,8 +9,8 @@ describe 'BranchArchive', ->
   b_cp = null
 
   add_files = [
-    { name: "master.ipa",   md5: "8b64ea08254c85e69d65ee7294431e0a" },
-    { name: "master.plist", md5: "0a1b8472e01bc836acecd246347d4492" }
+    { name: "4101.ipa",   md5: "8b64ea08254c85e69d65ee7294431e0a" },
+    { name: "4101.plist", md5: "0a1b8472e01bc836acecd246347d4492" }
   ]
 
   before (done) ->
@@ -89,73 +89,66 @@ describe 'BranchArchive', ->
       files = arch.files()
       files.save dup_files, (err, reply) =>
         assert.ifError err
-        console.log reply
         arch.find '4101', (err, reply) =>
           assert.ifError err
           reply.name.should.equal "4101"
+          assert.deepEqual reply.files, add_files
           done()
-          #util = require 'util'
-          #console.log util.inspect(reply.files, true, 10)
-          #console.log util.inspect(add_files, true, 10)
-          #assert.deepEqual reply.files, add_files
-          #done()
 
-  it "should be able to show added files for all branches"
-  # , (done) ->
-  #   branch1 = app.branches().build('master')
-  #   branch1.save (err, reply) =>
-  #     assert.ifError err
-  #     files1 = branch1.files()
-  #     files1.save dup_files, (err, reply) =>
-  #       assert.ifError err
-  #       branch2 = app.branches().build('development')
-  #       branch2.save (err, reply) =>
-  #         assert.ifError err
-  #         files2 = branch2.files()
-  #         dup_files = [
-  #           { location: "#{b_cp}master.ipa",   name: "master.ipa" },
-  #           { location: "#{b_cp}master.plist", name: "master.plist" }
-  #         ]
-  #
-  #         pfix = "#{__dirname}/fixtures"
-  #         fs.copy "#{pfix}/master.ipa", "#{b_cp}master.ipa", (err) =>
-  #           fs.copy "#{pfix}/master.plist", "#{b_cp}master.plist", (err) =>
-  #             files2.save dup_files, (err, reply) =>
-  #               assert.ifError err
-  #               branch2.all (err, reply) =>
-  #                 assert.ifError err
-  #                 ['master', 'development'].should.include(
-  #                   reply['branches'][0]['name'])
-  #                 ['master', 'development'].should.include(
-  #                   reply['branches'][1]['name'])
-  #                 done()
+  it "should be able to show added files for all archives", (done) ->
+    arch1 = branch.archives().build(4104)
+    arch1.save (err, reply) =>
+      assert.ifError err
+      files1 = arch1.files()
+      files1.save dup_files, (err, reply) =>
+        assert.ifError err
+        arch2 = branch.archives().build(4105)
+        arch2.save (err, reply) =>
+          assert.ifError err
+          files2 = arch2.files()
+          dup_files = [
+            { location: "#{b_cp}master.ipa",   name: "master.ipa" },
+            { location: "#{b_cp}master.plist", name: "master.plist" }
+          ]
+  
+          pfix = "#{__dirname}/fixtures"
+          fs.copy "#{pfix}/master.ipa", "#{b_cp}master.ipa", (err) =>
+            fs.copy "#{pfix}/master.plist", "#{b_cp}master.plist", (err) =>
+              files2.save dup_files, (err, reply) =>
+                assert.ifError err
+                arch2.all (err, reply) =>
+                  assert.ifError err
+                  ['4104', '4105'].should.include(
+                    reply['archives'][0]['name'])
+                  ['4104', '4105'].should.include(
+                    reply['archives'][1]['name'])
+                  done()
 
-  it "should be able to remove a single branch from an app"
-  # , (done) ->
-  #   app.branches().build('sillybranch').save (err, reply) =>
-  #     assert.ifError err
-  #     branch2 = app.branches().build('swallow')
-  #     branch2.save (err, reply) =>
-  #       assert.ifError err
-  #       branch2.delete "swallow", (err, reply) =>
-  #         fs.exists [config.get('repository'),
-  #         "zoidberg", "brainslugs", "branches", "master"].join('/'),
-  #             (exists) ->
-  #               exists.should.equal false
-  #               branch2.list (err, reply) =>
-  #                 assert.ifError err
-  #                 assert.deepEqual reply, ["sillybranch"]
-  #                 done()
+  it "should be able to remove a single archive from a branch", (done) ->
+    branch.archives().build(4110).save (err, reply) =>
+      assert.ifError err
+      arch2 = branch.archives().build(4111)
+      arch2.save (err, reply) =>
+        assert.ifError err
+        arch2.delete 4111, (err, reply) =>
+          fs.exists [config.get('repository'),
+          "zoidberg", "brainslugs", "branches", "master",
+          "archives", "4111"].join('/'),
+              (exists) ->
+                exists.should.equal false
+                arch2.list (err, reply) =>
+                  assert.ifError err
+                  assert.deepEqual reply, ["4110"]
+                  done()
 
-  it "should be able to remove all branches from an app"
-  # , (done) ->
-  #   app.branches().build('sillybranch').save (err, reply) =>
-  #     assert.ifError err
-  #     branch = app.branches().build('swallow')
-  #     branch.save (err, reply) =>
-  #       assert.ifError err
-  #       branch.delete_all (err, reply) =>
-  #         branch.list (err, reply) =>
-  #           assert.ifError err
-  #           assert.deepEqual reply, []
-  #           done()
+  it "should be able to remove all branches from an app", (done) ->
+    branch.archives().build(4104).save (err, reply) =>
+      assert.ifError err
+      arch = branch.archives().build(4110)
+      arch.save (err, reply) =>
+        assert.ifError err
+        arch.delete_all (err, reply) =>
+          arch.list (err, reply) =>
+            assert.ifError err
+            assert.deepEqual reply, []
+            done()

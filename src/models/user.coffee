@@ -132,7 +132,7 @@ class User extends RedisObject
   delete_all: (fn) =>
     @list (err, usernames) =>
       if usernames.length
-        async.forEach(usernames, @delete, fn)
+        async.each(usernames, @delete, fn)
       else
         fn(err)
 

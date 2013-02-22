@@ -236,6 +236,56 @@ describe 'WebServer', ->
         throw new Error(error)
         done()
 
+  it "should be able to add/update an archive", (done) ->
+    cmp_files = [
+      { name: "master.plist", md5: "0a1b8472e01bc836acecd246347d4492" },
+      { name: "master.ipa",   md5: "8b64ea08254c85e69d65ee7294431e0a" }
+    ]
+
+    client.post "#{url}/users/test_user", json: true
+    , form: admin_creds, (err, res, data) =>
+
+      upload_appfiles = (archive, fn) =>
+        file_mapping = fix_files.map (fmapping) =>
+          name: path.basename(fmapping.file)
+          value: fs.createReadStream(fmapping.file)
+
+        form = new FormData()
+        form.append('username', admin_creds.username)
+        form.append('secret',   admin_creds.secret)
+        for f in file_mapping
+          form.append(f.name, f.value)
+
+        http_info = url.split('//')[1].split(':')
+        http_host = http_info[0]
+        http_port = http_info[1]
+
+        app_url = "/test_user/example_app/branches/master"
+        if archive
+          app_url = [app_url, "archives", "1"].join('/')
+
+        req = http.request(
+          method: 'post'
+          host: http_host
+          port: http_port
+          path: app_url
+          headers: form.getHeaders())
+
+        form.pipe(req)
+
+        req.on 'response', (res) =>
+          res.on 'data', (data) =>
+            response_data = JSON.parse(data.toString())
+            fn(null, response_data)
+
+        req.on 'error', (error) =>
+          throw new Error(error)
+          done()
+
+      upload_appfiles false, (err, data) =>
+        upload_appfiles true, (err, data) =>
+          done()
+
   it "should be able to delete a tag", (done) ->
     client.post "#{url}/users/test_user", json: true
     , form: admin_creds, (err, res, data) ->

@@ -78,7 +78,7 @@ class ApplicationTag extends RedisObject
   ###
   delete_all: (fn) =>
     @list (err, taglist) =>
-      async.forEach(taglist, @delete, fn)
+      async.each(taglist, @delete, fn)
 
   ###*
    * Returns the list of files for the current tag.
