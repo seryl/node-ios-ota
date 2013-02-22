@@ -1,6 +1,6 @@
 {
   "name":"ios-ota",
-  "version":"0.1.11",
+  "version":"0.2.0",
   "description": "A node-based iOS over-the-air service",
   "author": "Josh Toft <joshtoft@gmail.com>",
   "repository": {
