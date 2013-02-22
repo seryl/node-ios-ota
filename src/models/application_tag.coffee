@@ -56,7 +56,7 @@ class ApplicationTag extends RedisObject
   save: (fn) =>
     stat_add = @redis.sadd(@taglist_prefix(), @current)
     status = if (stat_add) then null else
-      message: "Error saving tag: `#{@user}/#{@application}/#{@current}`."
+      message: "Error saving tag: `#{@user}/#{@application}/tags/#{@current}`."
     @setup_directories @current, (err, reply) =>
       fn(status, @current)
 

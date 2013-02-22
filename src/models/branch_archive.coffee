@@ -7,18 +7,18 @@ Files = require './files'
 ###*
  * A helper for working with archives for a branch.
 ###
-class ApplicationArchive extends RedisObject
-  constructor: (@user, @application, @branch=null, ref) ->
+class BranchArchive extends RedisObject
+  constructor: (@user, @application, @branch, ref=null) ->
     super ref
     @basename = "node-ios-ota::applications"
-    @object_name = 'archive'
+    @object_name = 'archives'
 
   ###*
    * Returns the the prefix for the branchlist.
    * @return {String} The archivelist prefix for the branch
   ###
   archivelist_prefix: =>
-    return [@basename, @user, @application, @object_name, @branch].join('::')
+    return [@basename, @user, @application, "branches", @branch, @object_name].join('::')
 
   ###*
    * Returns the list of archives for the current branch.
@@ -34,13 +34,13 @@ class ApplicationArchive extends RedisObject
   ###
   find: (name, fn) =>
     original = @current
-    @current = name
+    @current = String(name)
     @files().all (err, reply) =>
       @current = original
-      fn(err, {name: name, files: reply} )
+      fn(err, {name: String(name), files: reply} )
 
   ###*
-   * Returns the information for all the current application branches.
+   * Returns the information for all the current branch archives.
    * @param {Function} (fn) The callback function
   ###
   all: (fn) =>
@@ -54,9 +54,9 @@ class ApplicationArchive extends RedisObject
    * @param {Function} (fn) The callback function
   ###
   save: (fn) =>
-    stat_add = @redis.sadd(@archivelist_prefix(), @current)
+    stat_add = @redis.sadd(@archivelist_prefix(), String(@current))
     status = if (stat_add) then null else
-      message: "Error saving archive: `#{@user}/#{@application}/#{@current}`."
+      message: "Error saving archive: `#{@user}/#{@application}/branches/#{@branch}/archives/#{@current}`."
     @setup_directories @current, (err, reply) =>
       fn(status, @current)
 
@@ -66,34 +66,34 @@ class ApplicationArchive extends RedisObject
    * @param {Function} (fn) The callback function
   ###
   delete: (ref, fn) =>
-    @current = branch
-    @redis.srem(@archivelist_prefix(), ref)
+    @current = ref
+    @redis.srem(@archivelist_prefix(), String(ref))
     @files().delete_all (err, reply) =>
-      @delete_directories branch, (err, reply) =>
+      @delete_directories ref, (err, reply) =>
         fn(null, true)
 
   ###*
-   * Deletes the branches for a given application.
+   * Deletes the branch archives for a given application.
    * @param {Function} (fn) The callback function
   ###
   delete_all: (fn) =>
-    @list (err, branchlist) =>
-      async.forEach(branchlist, @delete, fn)
+    @list (err, archivelist) =>
+      async.forEach(archivelist, @delete, fn)
 
   ###*
    * Returns the list of files for the current branch.
    * @return {Object} The Files object for the current branch
   ###
   files: =>
-    return new Files(@user, @application, @object_name, @current)
+    return new Files(@user, @application, "#{@branch}::#{@object_name}", String(@current))
 
   ###*
-   * Creates the directories for the branch.
-   * @param {Object} (branch) The branch to create directories for
+   * Creates the directories for the archive ref.
+   * @param {Object} (ref) The archive ref to create directories for
    * @param {Function} (fn) The callback function
   ###
-  setup_directories: (branch, fn) =>
-    dirloc = [@user, @application, @object_name, branch].join('/')
+  setup_directories: (ref, fn) =>
+    dirloc = [@user, @application, "branches", @branch, @object_name, ref].join('/')
     target = [@config.get('repository'), dirloc].join('/')
     fs.exists target, (exists) =>
       unless exists
@@ -105,15 +105,16 @@ class ApplicationArchive extends RedisObject
         fn(null, false)
 
   ###*
-   * Deletes the directories for the branch.
-   * @param {Object} (branch) The branch to create directories for
+   * Deletes the directories for the archive ref.
+   * @param {Object} (ref) The archive ref to create directories for
    * @param {Function} (fn) The callback function
   ###
-  delete_directories: (branch, fn) =>
-    dirloc = [@user, @application, @object_name, branch].join('/')
+  delete_directories: (ref, fn) =>
+    dirloc = [@user, @application, @branch, @object_name, ref].join('/')
     fs.rmdir [@config.get('repository'), dirloc].join('/'), (err) =>
       if err
         @logger.error "Error removing directories for `#{dirloc}`."
       fn(null, true)
 
-module.exports = ApplicationBranch
+module.exports = BranchArchive
+

@@ -17,5 +17,5 @@ global.config = Config.get()
 
 config.overrides({
   'port': 8080,
-  'repository': path.normalize("#{os.tmpDir()}/tmp/node-ios-ota")
+  'repository': path.normalize("#{os.tmpDir()}/node-ios-ota")
 })

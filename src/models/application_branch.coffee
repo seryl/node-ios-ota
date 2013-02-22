@@ -2,6 +2,7 @@ fs = require 'fs'
 async = require 'async'
 
 RedisObject = require './redis_object'
+BranchArchive = require './branch_archive'
 Files = require './files'
 
 ###*
@@ -56,7 +57,7 @@ class ApplicationBranch extends RedisObject
   save: (fn) =>
     stat_add = @redis.sadd(@branchlist_prefix(), @current)
     status = if (stat_add) then null else
-      message: "Error saving branch: `#{@user}/#{@application}/#{@current}`."
+      message: "Error saving branch: `#{@user}/#{@application}/branches/#{@current}`."
     @setup_directories @current, (err, reply) =>
       fn(status, @current)
 
@@ -68,6 +69,7 @@ class ApplicationBranch extends RedisObject
   delete: (branch, fn) =>
     @current = branch
     @redis.srem(@branchlist_prefix(), branch)
+    @archives().delete_all (err, reply) =>
     @files().delete_all (err, reply) =>
       @delete_directories branch, (err, reply) =>
         fn(null, true)
@@ -95,14 +97,25 @@ class ApplicationBranch extends RedisObject
   setup_directories: (branch, fn) =>
     dirloc = [@user, @application, @object_name, branch].join('/')
     target = [@config.get('repository'), dirloc].join('/')
+
     fs.exists target, (exists) =>
       unless exists
         fs.mkdir target, (err, made) =>
           if err
             @logger.error "Error setting up directories for `#{dirloc}`."
-          fn(err, made)
+          fs.mkdir [target, "archives"].join('/'), (err, made) =>
+            if err
+              @logger.error "Error setting up directories for `#{dirloc}/archives`"
+            fn(err, made)
       else
         fn(null, false)
+
+  ###*
+   * Returns the list of archives for the current branch.
+   * @return {Object} The BranchArchive object for the current branch
+  ###
+  archives: =>
+    return new BranchArchive(@user, @application, @current)
 
   ###*
    * Deletes the directories for the branch.
@@ -111,9 +124,15 @@ class ApplicationBranch extends RedisObject
   ###
   delete_directories: (branch, fn) =>
     dirloc = [@user, @application, @object_name, branch].join('/')
-    fs.rmdir [@config.get('repository'), dirloc].join('/'), (err) =>
+    fulldir = [@config.get('repository'), dirloc].join('/')
+    msg = "Error removing directories for"
+
+    fs.rmdir fulldir, (err) =>
       if err
-        @logger.error "Error removing directories for `#{dirloc}`."
-      fn(null, true)
+        @logger.error "#{msg} `#{dirloc}`."
+      fs.rmdir [fulldir, "archives"].join('/'), (err) =>
+        if err
+          @logger.error "#{msg} `#{dirloc}/archives`."
+          fn(null, true)
 
 module.exports = ApplicationBranch
