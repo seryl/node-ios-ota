@@ -82,7 +82,7 @@ describe 'BranchArchive', ->
         assert.deepEqual reply.files, []
         done()
 
-  it "should be able to show added files for a single branch", (done) ->
+  it "should be able to show added files for a single archive", (done) ->
     arch = branch.archives().build(4101)
     arch.save (err, reply) =>
       assert.ifError err
@@ -90,10 +90,10 @@ describe 'BranchArchive', ->
       files.save dup_files, (err, reply) =>
         assert.ifError err
         console.log reply
-        done()
-        #arch.find 4101, (err, reply) =>
-          #assert.ifError err
-          #reply.name.should.equal "4101"
+        arch.find '4101', (err, reply) =>
+          assert.ifError err
+          reply.name.should.equal "4101"
+          done()
           #util = require 'util'
           #console.log util.inspect(reply.files, true, 10)
           #console.log util.inspect(add_files, true, 10)
@@ -116,7 +116,7 @@ describe 'BranchArchive', ->
   #           { location: "#{b_cp}master.ipa",   name: "master.ipa" },
   #           { location: "#{b_cp}master.plist", name: "master.plist" }
   #         ]
-  # 
+  #
   #         pfix = "#{__dirname}/fixtures"
   #         fs.copy "#{pfix}/master.ipa", "#{b_cp}master.ipa", (err) =>
   #           fs.copy "#{pfix}/master.plist", "#{b_cp}master.plist", (err) =>
