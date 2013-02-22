@@ -232,6 +232,7 @@ class WebServer
             res.json 200, message: "ok"
           flist = [req.files[k] for k in Object.keys(req.files)]
           f_normal = [mapto_flist(f) for f in flist[0]][0]
+          a_normal = [mapto_flist(f) for f in flist[0]][0]
 
           return_files = () =>
             files = branch.files()
@@ -254,8 +255,11 @@ class WebServer
                   location_map['name'] = new_name
                   fn(err, location_map)
 
-              async.map f_normal, copy_archive_file, (err, results) =>
-                return_files()
+              async.map a_normal, copy_archive_file, (err, results) =>
+                archive = branch.archives().build(ref)
+                afiles = archive.files()
+                afiles.save results, (err, reply) =>
+                  return_files()
           else
             return_files()
 
