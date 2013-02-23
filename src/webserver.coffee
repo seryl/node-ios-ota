@@ -256,11 +256,13 @@ class WebServer
                   fn(err, location_map)
 
               async.map a_normal, copy_archive_file, (err, results) =>
-                archive = branch.archives().build(ref)
-                archive.save (err, reply) =>
-                  afiles = archive.files()
-                  afiles.save results, (err, reply) =>
-                    return_files()
+                nplist = (results.filter (X) -> /\.plist/.test X['name']).pop()
+                @archive_plist_update nplist['location'], (err, data) =>
+                  archive = branch.archives().build(ref)
+                  archive.save (err, reply) =>
+                    afiles = archive.files()
+                    afiles.save results, (err, reply) =>
+                      return_files()
           else
             return_files()
 
