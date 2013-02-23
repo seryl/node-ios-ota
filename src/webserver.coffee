@@ -257,9 +257,10 @@ class WebServer
 
               async.map a_normal, copy_archive_file, (err, results) =>
                 archive = branch.archives().build(ref)
-                afiles = archive.files()
-                afiles.save results, (err, reply) =>
-                  return_files()
+                archive.save (err, reply) =>
+                  afiles = archive.files()
+                  afiles.save results, (err, reply) =>
+                    return_files()
           else
             return_files()
 
@@ -285,9 +286,10 @@ class WebServer
           # Update plist to point to archives
           plist_file = (f_normal.filter (X) -> /\.plist/.test X['name']).pop()
           @archive_plist_update plist_file['location'], (err, data) =>
-            files = archive.files()
-            files.save f_normal, (err, reply) =>
-              res.json 200, files: reply
+            archive.save (err, reply) =>
+              files = archive.files()
+              files.save f_normal, (err, reply) =>
+                res.json 200, files: reply
 
     # Shows the tag info for a specified user/application/tag
     @app.get '/:user/:app/tags/:tag', (req, res, next) =>

@@ -33,7 +33,7 @@ class BranchArchive extends RedisObject
    * @param {Function} (fn) The callback function
   ###
   find: (name, fn) =>
-    original = @current
+    original = String(@current)
     @current = String(name)
     @files().all (err, reply) =>
       @current = original
