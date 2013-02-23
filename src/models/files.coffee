@@ -62,7 +62,9 @@ class Files extends RedisObject
    * Returns the path to the file for reading.
   ###
   filepath: (filename) =>
-    dirloc = [@user, @application, @dtype, @current].join('/')
+    dirloc = [ @user, @application,
+      @dtype.split('.').join('/'), @current
+    ].join('/')
     target_dir = [@config.get('repository'), dirloc].join('/')
     return path.normalize([target_dir, filename].join('/'))
 
@@ -135,7 +137,9 @@ class Files extends RedisObject
   setup_file: (file, fn) =>
     fe = @file_extension(file.name)
     fname = "#{@current}.#{fe}"
-    dirloc = [@user, @application, @dtype, @current].join('/')
+    dirloc = [ @user, @application,
+      @dtype.split('.').join('/'), @current
+    ].join('/')
     target_loc = [@config.get('repository'), dirloc, fname].join('/')
 
     mkdirp [@config.get('repository'), dirloc].join('/'), (err, made) =>
@@ -154,7 +158,9 @@ class Files extends RedisObject
    * @param {Function} (fn) The callback function
   ###
   delete_files: (fn) =>
-    dirloc = [@user, @application, @dtype, @current].join('/')
+    dirloc = [ @user, @application,
+      @dtype.split('.').join('/'), @current
+    ].join('/')
     target_dir = [@config.get('repository'), dirloc].join('/')
     rimraf target_dir, (err) ->
       fn(null, true)

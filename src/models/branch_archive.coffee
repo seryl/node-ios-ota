@@ -85,7 +85,7 @@ class BranchArchive extends RedisObject
    * @return {Object} The Files object for the current branch
   ###
   files: =>
-    return new Files(@user, @application, "#{@branch}.#{@object_name}", String(@current))
+    return new Files(@user, @application, "branches.#{@branch}.#{@object_name}", String(@current))
 
   ###*
    * Creates the directories for the archive ref.
