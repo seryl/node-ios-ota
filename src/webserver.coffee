@@ -250,7 +250,7 @@ class WebServer
                 fs.copy loc, new_loc, (err) =>
                   location_map['location'] = new_loc
 
-                  name_match = location_map['name'].match(/(\S+)\.(.*)/)
+                  name_match = location_map['name'].match(/(\S+)\.(ipa|plist|dSYM\.tar\.gz)/)
                   new_name = "#{ref}.#{name_match[2]}"
                   location_map['name'] = new_name
                   fn(err, location_map)
