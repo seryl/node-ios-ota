@@ -130,7 +130,7 @@ class Files extends RedisObject
   
     f =
       location: "/tmp/54e05c292ef585094a12b20818b3f952"
-        name: "master.ipa"
+      name: "master.ipa"
   
     setup_file(f, (err, reply) -> console.log reply)
   
