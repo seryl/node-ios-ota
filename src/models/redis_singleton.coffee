@@ -3,8 +3,8 @@ redis = require 'redis'
 config = require 'nconf'
 logger = require '../logger'
 
-###*
- * Redis utility wrapper that acts as a singleton.
+###
+Redis utility wrapper that acts as a singleton.
 ###
 class RedisSingleton
   constructor: ->
