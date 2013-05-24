@@ -1,3 +1,4 @@
+[![build status](https://secure.travis-ci.org/seryl/node-ios-ota.png)](http://travis-ci.org/seryl/node-ios-ota)
 ios-ota
 =======
 
@@ -70,7 +71,3 @@ localhost:3000/zoidberg/brainslugs/tags/1.0 -d '
   "secret": "admin"
 }'
 ```
-
-## Code Status
-
-[![build status](https://secure.travis-ci.org/seryl/node-ios-ota.png)](http://travis-ci.org/seryl/node-ios-ota)
