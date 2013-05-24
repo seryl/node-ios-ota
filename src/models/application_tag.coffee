@@ -3,6 +3,7 @@ async = require 'async'
 
 RedisObject = require './redis_object'
 Files = require './files'
+logger = require '../logger'
 
 ###*
  * A helper for working with tags for an application/user combo.
@@ -94,12 +95,12 @@ class ApplicationTag extends RedisObject
   ###
   setup_directories: (tag, fn) =>
     dirloc = [@user, @application, @object_name, tag].join('/')
-    target = [@config.get('repository'), dirloc].join('/')
+    target = [config.get('repository'), dirloc].join('/')
     fs.exists target, (exists) =>
       unless exists
         fs.mkdir target, (err, made) =>
           if err
-            @logger.error "Error setting up directories for `#{dirloc}`."
+            logger.error "Error setting up directories for `#{dirloc}`."
           fn(err, made)
       else
         fn(null, false)
@@ -111,9 +112,9 @@ class ApplicationTag extends RedisObject
   ###
   delete_directories: (tag, fn) =>
     dirloc = [@user, @application, @object_name, tag].join('/')
-    fs.rmdir [@config.get('repository'), dirloc].join('/'), (err) =>
+    fs.rmdir [config.get('repository'), dirloc].join('/'), (err) =>
       if err
-        @logger.error "Error removing directories for `#{dirloc}`."
+        logger.error "Error removing directories for `#{dirloc}`."
       fn(null, true)
 
 module.exports = ApplicationTag

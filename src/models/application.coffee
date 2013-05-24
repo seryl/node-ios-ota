@@ -4,6 +4,7 @@ async = require 'async'
 RedisObject = require './redis_object'
 ApplicationBranch = require './application_branch'
 ApplicationTag = require './application_tag'
+logger = require '../logger'
 
 ###*
  * A helper for working with applications of a particular user.
@@ -127,20 +128,20 @@ class Application extends RedisObject
   ###
   setup_directories: (application, fn) =>
     dirloc = [@user, application].join('/')
-    fulldir = [@config.get('repository'), dirloc].join('/')
+    fulldir = [config.get('repository'), dirloc].join('/')
     msg = "Error setting up directories for"
 
     fs.mkdir fulldir, (err, made) =>
       if err
-        @logger.error "#{msg} `#{dirloc}`."
+        logger.error "#{msg} `#{dirloc}`."
 
       fs.mkdir [fulldir, "tags"].join('/'), (err, made) =>
         if err
-          @logger.error "#{msg} `#{dirloc}/tags`."
+          logger.error "#{msg} `#{dirloc}/tags`."
 
         fs.mkdir [fulldir, "branches"].join('/'), (err, made) =>
           if err
-            @logger.error "#{msg} `#{dirloc}/branches`."
+            logger.error "#{msg} `#{dirloc}/branches`."
           fn(err, made)
 
   ###*
@@ -150,20 +151,20 @@ class Application extends RedisObject
   ###
   delete_directories: (application, fn) =>
     dirloc = [@user, application].join('/')
-    fulldir = [@config.get('repository'), dirloc].join('/')
+    fulldir = [config.get('repository'), dirloc].join('/')
     msg = "Error removing directories for"
 
     fs.rmdir fulldir, (err) =>
       if err
-        @logger.error "#{msg} `#{dirloc}`."
+        logger.error "#{msg} `#{dirloc}`."
 
       fs.rmdir [fulldir, "tags"].join('/'), (err) =>
         if err
-          @logger.error "#{msg} `#{dirloc}/tags`."
+          logger.error "#{msg} `#{dirloc}/tags`."
 
         fs.rmdir [fulldir, "branches"].join('/'), (err) =>
           if err
-            @logger.error "#{msg} `#{dirloc}/branches`."
+            logger.error "#{msg} `#{dirloc}/branches`."
           fn(null, true)
 
 module.exports = Application

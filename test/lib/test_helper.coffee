@@ -9,11 +9,10 @@ global.assert = chai.assert
 
 chai.should()
 
-Config = require '../../src/config'
+global.config = require 'nconf'
 CLI = require '../../src/cli'
 
 global.cli = new CLI()
-global.config = Config.get()
 
 config.overrides({
   'port': 8080,

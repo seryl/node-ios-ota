@@ -7,6 +7,7 @@ mv = require 'mv'
 
 RedisObject = require './redis_object'
 filemd5 = require '../filemd5'
+logger = require '../logger'
 
 ###*
  * A helper for working with files for a branch or tag of an application.
@@ -65,7 +66,7 @@ class Files extends RedisObject
     dirloc = [ @user, @application,
       @dtype.split('.').join('/'), @current
     ].join('/')
-    target_dir = [@config.get('repository'), dirloc].join('/')
+    target_dir = [config.get('repository'), dirloc].join('/')
     return path.normalize([target_dir, filename].join('/'))
 
   ###*
@@ -140,17 +141,17 @@ class Files extends RedisObject
     dirloc = [ @user, @application,
       @dtype.split('.').join('/'), @current
     ].join('/')
-    target_loc = [@config.get('repository'), dirloc, fname].join('/')
+    target_loc = [config.get('repository'), dirloc, fname].join('/')
 
-    mkdirp [@config.get('repository'), dirloc].join('/'), (err, made) =>
+    mkdirp [config.get('repository'), dirloc].join('/'), (err, made) =>
       if err
-        @logger.error "Error setting up directories for `#{@current}`."
+        logger.error "Error setting up directories for `#{@current}`."
 
       mv path.normalize(file.location), target_loc, (err) =>
         unless err
           filemd5 target_loc, (err, data) =>
             if err
-              @logger.error "Error setting up files for `#{target_loc}`."
+              logger.error "Error setting up files for `#{target_loc}`."
             fn(err, { name: fname, md5: data })
 
   ###*
@@ -161,7 +162,7 @@ class Files extends RedisObject
     dirloc = [ @user, @application,
       @dtype.split('.').join('/'), @current
     ].join('/')
-    target_dir = [@config.get('repository'), dirloc].join('/')
+    target_dir = [config.get('repository'), dirloc].join('/')
     rimraf target_dir, (err) ->
       fn(null, true)
 

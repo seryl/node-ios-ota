@@ -3,6 +3,7 @@ async = require 'async'
 
 RedisObject = require './redis_object'
 Files = require './files'
+logger = require '../logger'
 
 ###*
  * A helper for working with archives for a branch.
@@ -94,12 +95,12 @@ class BranchArchive extends RedisObject
   ###
   setup_directories: (ref, fn) =>
     dirloc = [@user, @application, "branches", @branch, @object_name, ref].join('/')
-    target = [@config.get('repository'), dirloc].join('/')
+    target = [config.get('repository'), dirloc].join('/')
     fs.exists target, (exists) =>
       unless exists
         fs.mkdir target, (err, made) =>
           if err
-            @logger.error "Error setting up directories for `#{dirloc}`."
+            logger.error "Error setting up directories for `#{dirloc}`."
           fn(err, made)
       else
         fn(null, false)
@@ -111,9 +112,9 @@ class BranchArchive extends RedisObject
   ###
   delete_directories: (ref, fn) =>
     dirloc = [@user, @application, "branches", @branch, @object_name, ref].join('/')
-    fs.rmdir [@config.get('repository'), dirloc].join('/'), (err) =>
+    fs.rmdir [config.get('repository'), dirloc].join('/'), (err) =>
       if err
-        @logger.error "Error removing directories for `#{dirloc}`."
+        logger.error "Error removing directories for `#{dirloc}`."
       fn(null, true)
 
 module.exports = BranchArchive

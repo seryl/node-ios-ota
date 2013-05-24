@@ -6,6 +6,7 @@ mkdirp = require 'mkdirp'
 RedisObject = require './redis_object'
 Application = require './application'
 {generate_identity} = require '../identity'
+logger = require '../logger'
 
 ###*
  * A helper for representing a particular user and their applications.
@@ -172,9 +173,9 @@ class User extends RedisObject
    * @param {Function} (fn) The callback function
   ###
   setup_directories: (username, fn) =>
-    mkdirp [@config.get('repository'), username].join('/'), (err, made) =>
+    mkdirp [config.get('repository'), username].join('/'), (err, made) =>
       if err
-        @logger.error "Error setting up directories for `#{username}`."
+        logger.error "Error setting up directories for `#{username}`."
       fn(err, made)
 
   ###*
@@ -183,9 +184,9 @@ class User extends RedisObject
    * @param {Function} (fn) The callback function
   ###
   delete_directories: (username, fn) =>
-    fs.rmdir [@config.get('repository'), username].join('/'), (err) =>
+    fs.rmdir [config.get('repository'), username].join('/'), (err) =>
       if err
-        @logger.error "Error removing directories for `#{username}`."
+        logger.error "Error removing directories for `#{username}`."
       fn(null, true)
 
   ###*
