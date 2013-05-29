@@ -1,4 +1,4 @@
-ios-ota
+ios-ota [![build status](https://secure.travis-ci.org/seryl/node-ios-ota.png)](https://travis-ci.org/seryl/node-ios-ota)
 =======
 
 A node-based iOS over-the-air service.
@@ -70,7 +70,3 @@ localhost:3000/zoidberg/brainslugs/tags/1.0 -d '
   "secret": "admin"
 }'
 ```
-
-## Code Status
-
-[![build status](https://secure.travis-ci.org/seryl/node-ios-ota.png)](http://travis-ci.org/seryl/node-ios-ota)
