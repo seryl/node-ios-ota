@@ -16,5 +16,5 @@ global.cli = new CLI()
 
 config.overrides({
   'port': 8080,
-  'repository': path.normalize("#{os.tmpDir()}/node-ios-ota")
+  'repository': path.normalize(path.join(__dirname, "..", "tmp"))
 })
