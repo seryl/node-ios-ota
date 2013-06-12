@@ -16,13 +16,21 @@ describe 'Files', ->
   before (done) ->
     fs.exists config.get('repository'), (exists) ->
       if exists
-        done()
+        fs.exists config.get('client_repo'), (exists) ->
+          if exists then done()
+          else
+            fs.mkdir config.get('client_repo'), (exists) ->
+              done()
       else
         fs.mkdir config.get('repository'), (err) ->
-          done()
+          fs.exists config.get('client_repo'), (exists) ->
+          if exists then done()
+          else
+            fs.mkdir config.get('client_repo'), (exists) ->
+              done()
 
   beforeEach (done) ->
-    b_cp = config.get('repository')
+    b_cp = config.get('client_repo')
     user = new User({ name: "zoidberg" })
     user.delete_all =>
       user.save (err, username) =>
@@ -48,7 +56,8 @@ describe 'Files', ->
       branch = null
       tag = null
       rimraf config.get('repository'), (err) ->
-        done()
+        rimraf config.get('client_repo'), (err) ->
+          done()
 
   it "should have the object name `files`", ->
     tag.files().object_name.should.equal "files"

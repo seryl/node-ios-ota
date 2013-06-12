@@ -17,4 +17,5 @@ global.cli = new CLI()
 config.overrides({
   'port': 8080,
   'repository': path.normalize(path.join(__dirname, "..", "tmp"))
+  'client_repo': path.normalize(path.join(__dirname, "..", "tmp_client"))
 })
