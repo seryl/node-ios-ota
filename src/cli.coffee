@@ -1,16 +1,13 @@
 optimist = require 'optimist'
+logger = require './logger'
+config = require 'nconf'
 require('pkginfo')(module, 'name')
 
-Config = require './config'
-Logger = require './logger'
-
-###*
- * The command line interface class.
+###
+The command line interface class.
 ###
 class CLI
   constructor: ->
-    @config = Config.get()
-    @logger = Logger.get()
     @argv = optimist
       .usage("Usage: " + exports.name)
 
@@ -64,40 +61,40 @@ class CLI
 
     @configure()
 
-    if @config.get('help') and @config.get('help').toString() is "true"
+    if config.get('help') and config.get('help').toString() is "true"
       optimist.showHelp()
       process.exit(0)
 
   # Configures the nconf mapping where the priority matches the order
   configure: =>
     @set_overrides()
-    @set_argv()
     @set_env()
+    @set_argv()
     @set_file()
     @set_defaults()
 
   # Sets up forceful override values
   set_overrides: =>
-    @config.overrides({
+    config.overrides({
       })
 
   # Sets up the configuration for cli arguments
   set_argv: =>
-    @config.add('optimist_args', {type: 'literal', store: @argv})
+    config.add('optimist_args', {type: 'literal', store: @argv})
 
   # Sets up the environment configuration
   set_env: =>
-    @config.env({
+    config.env({
       whitelist: []
       })
 
   # Sets up the file configuration
   set_file: =>
-    @config.file({ file: @config.get('c') })
+    config.file({ file: config.get('c') })
 
   # Sets up the default configuration
   set_defaults: =>
-    @config.defaults({
+    config.defaults({
       })
 
 module.exports = CLI

@@ -5,47 +5,43 @@ plist = require 'plist'
 async = require 'async'
 require('pkginfo')(module, 'name', 'version')
 
-Config = require './config'
-Logger = require './logger'
-{Identity, generate_identity} = require './identity'
+config = require 'nconf'
+logger = require './logger'
+{identity, generate_identity} = require './identity'
 User = require './models/user'
 
 errorHandler = (err, req, res, next) ->
-  res.status 500
-  res.render 'error', error: err
+  res.json(500, error: err)
 
-###*
- * The iOS-ota webserver class.
+###
+The iOS-ota webserver class.
 ###
 class WebServer
   constructor: ->
-    @config = Config.get()
-    @logger = Logger.get()
-    @identity = Identity.get()
     @app = express()
     @app.configure
 
     @app.use express.bodyParser
       uploadDir: '/tmp',
       keepExtensions: false
-    @app.use errorHandler
+    @app.use(errorHandler)
     @setup_routing()
     @srv = http.createServer(@app)
-    @srv.listen(@config.get('port'))
-    @logger.info "Webserver is up at: http://0.0.0.0:#{@config.get('port')}"
+    @srv.listen(config.get('port'))
+    logger.info "Webserver is up at: http://0.0.0.0:#{config.get('port')}"
 
   # Sets up the webserver routing.
   setup_routing: =>
 
     # Returns the base name and version of the app.
     @app.get '/', (req, res, next) =>
-      res.json 200, 
+      res.json 200,
         name: exports.name,
         version: exports.version
 
     # List help.
     @app.get '/help', (req, res, next) =>
-      res.json 200
+      res.json 200,
         message: "restdown docs coming soon."
 
     # Silence favicon requests.
@@ -123,7 +119,7 @@ class WebServer
               user: username
               message: "Error retrieving apps for user `#{username}`."
 
-          res.json 200
+          res.json 200,
             user: username
             location: location
             applications: reply
@@ -145,7 +141,7 @@ class WebServer
     @app.put '/:user/:app', (req, res, next) =>
       user = new User({ name: req.params.user })
       user.applications().build(req.params.app).save (err, reply) =>
-        res.json 200
+        res.json 200,
           message: "Successfully updated application `#{req.params.app}`."
 
     # Returns the list of branches/tags for a specific app.
@@ -175,7 +171,7 @@ class WebServer
     @app.get '/:user/:app/branches', (req, res, next) =>
       location = [req.params.user, req.params.app, 'branches']
       loc = location.join('/')
-      location.unshift(@config.get('repository'))
+      location.unshift(config.get('repository'))
       user = new User({ name: req.params.user })
       app = user.applications().build(req.params.app)
       branches = app.branches()
@@ -188,7 +184,7 @@ class WebServer
     @app.get '/:user/:app/tags', (req, res, next) =>
       location = [req.params.user, req.params.app, 'tags']
       loc = location.join('/')
-      location.unshift(@config.get('repository'))
+      location.unshift(config.get('repository'))
       user = new User({ name: req.params.user })
       app = user.applications().build(req.params.app)
       tags = app.tags()
@@ -240,7 +236,7 @@ class WebServer
               res.json 200, files: reply
 
           # Check for automatic branch archiving
-          if @config.get('archive')
+          if config.get('archive')
             plist_file = (f_normal.filter (X) -> /\.plist/.test X['name']).pop()
             @plist_bundle_version plist_file['location']
             , (err, ref) =>
@@ -432,10 +428,10 @@ class WebServer
         readStream = fs.createReadStream(target
         , bufferSize: 4 * 1024).pipe(res)
 
-  ###*
-   * Check what the user-agent is an iPhone or iPad.
-   * @params {Object} (req) The express request object
-   * @return {Boolean} Whether or not the user-agent is an iphone/ipad
+  ###
+  Check what the user-agent is an iPhone or iPad.
+  @params {Object} (req) The express request object
+  @return {Boolean} Whether or not the user-agent is an iphone/ipad
   ###
   is_ios_useragent: (req) =>
     ua_regex = /[iI][pP](hone|ad)/
@@ -447,10 +443,10 @@ class WebServer
   redirect_to_plist: (req, res, next) =>
     res.redirect(302, '/')
 
-  ###*
-   * Authenticates the user.
-   * @param {Object} (req) The express request object
-   * @param {Function} (fn) The callback function
+  ###
+  Authenticates the user.
+  @param {Object} (req) The express request object
+  @param {Function} (fn) The callback function
   ###
   authenticate: (req, fn) =>
     err = false
@@ -471,7 +467,7 @@ class WebServer
         message: "Unauthorized: No secret parameter was provided."
 
     if credentials.username == "admin"
-      if credentials.secret != @config.get('admin_secret')
+      if credentials.secret != config.get('admin_secret')
         err = true
         reply =
           code: 401,
@@ -494,11 +490,11 @@ class WebServer
             message: "Unauthorized: Invalid authentication secret."
         return fn(err, reply)
 
-  ###*
-   * Authenticates the user, and if the user is managing themselves, elevate.
-   * @param {Object} (req) The express request object
-   * @param {Function} (fn) The callback function
-   * @param {String} (user) The user to test against for elevated privs
+  ###
+  Authenticates the user, and if the user is managing themselves, elevate.
+  @param {Object} (req) The express request object
+  @param {Function} (fn) The callback function
+  @param {String} (user) The user to test against for elevated privs
   ###
   authenticate_with_self_admin: (req, fn, user) =>
     credentials =
@@ -509,10 +505,10 @@ class WebServer
       if credentials.username == user then reply.admin = true
       return fn(err, reply)
 
-  ###*
-   * Retrieve plist bundle-version.
-   * @param {String}   (location) The location of the plist
-   * @param {Function} (fn) The callback function
+  ###
+  Retrieve plist bundle-version.
+  @param {String}   (location) The location of the plist
+  @param {Function} (fn) The callback function
   ###
   plist_bundle_version: (location, fn) =>
     fs.readFile location, (err, data) =>
@@ -520,10 +516,10 @@ class WebServer
       ref = pdata.items[0].metadata['bundle-version']
       fn(err, ref)
 
-  ###*
-   * Takes a given plist and forces the download url to point to archives.
-   * @param {String}   (location) The location of the plist to modify
-   * @param {Function} (fn) The callback function
+  ###
+  Takes a given plist and forces the download url to point to archives.
+  @param {String}   (location) The location of the plist to modify
+  @param {Function} (fn) The callback function
   ###
   archive_plist_update: (location, fn) =>
     fs.readFile location, (err, data) =>

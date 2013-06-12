@@ -5,13 +5,12 @@ http = require 'http'
 mkdirp = require 'mkdirp'
 FormData = require 'form-data'
 
-Logger = require '../src/logger'
+logger = require '../src/logger'
 User = require '../src/models/user'
 WebServer = require '../src/webserver'
 
 describe 'WebServer', ->
   ws = null
-  logger = Logger.get()
 
   url = "http://127.0.0.1:#{config.get('port')}"
   client = rest
@@ -36,7 +35,7 @@ describe 'WebServer', ->
     logger.clear()
     mkdirp config.get('repository'), (err, made) =>
       if err
-        @logger.error "Error setting up test webserver directories."
+        logger.error "Error setting up test webserver directories."
       ws = new WebServer(config.get('port'))
       done()
 

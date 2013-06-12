@@ -15,33 +15,42 @@ describe 'ApplicationBranch', ->
   before (done) ->
     fs.exists config.get('repository'), (exists) ->
       if exists
-        done()
+        fs.exists config.get('client_repo'), (exists) ->
+          if exists then done()
+          else
+            fs.mkdir config.get('client_repo'), (exists) ->
+              done()
       else
         fs.mkdir config.get('repository'), (err) ->
-          done()
+          fs.exists config.get('client_repo'), (exists) ->
+          if exists then done()
+          else
+            fs.mkdir config.get('client_repo'), (exists) ->
+              done()
 
   beforeEach (done) ->
+    b_cp = config.get('client_repo')
     user = new User({ name: "zoidberg" })
     user.delete_all ->
       user.save (err, username) ->
         app = user.applications().build('brainslugs')
         app.save (err, reply) ->
-          b_cp = os.tmpDir()
           dup_files = [
-            { location: "#{b_cp}master.ipa", name: "master.ipa" },
-            { location: "#{b_cp}master.plist", name: "master.plist" }
+            { location: path.join(b_cp, "master.ipa"), name: "master.ipa" },
+            { location: path.join(b_cp, "master.plist"), name: "master.plist" }
           ]
 
           pfix = "#{__dirname}/fixtures"
-          fs.copy "#{pfix}/master.ipa", "#{b_cp}master.ipa", (err) =>
-            fs.copy "#{pfix}/master.plist", "#{b_cp}master.plist", (err) =>
+          fs.copy "#{pfix}/master.ipa", "#{b_cp}/master.ipa", (err) =>
+            fs.copy "#{pfix}/master.plist", "#{b_cp}/master.plist", (err) =>
               done()
 
   after (done) ->
     user.delete_all ->
       app = null
       rimraf config.get('repository'), (err) ->
-        done()
+        rimraf config.get('client_repo'), (err) ->
+          done()
 
   it "should have the object name `branches`", ->
     app.branches().object_name.should.equal "branches"
@@ -102,13 +111,13 @@ describe 'ApplicationBranch', ->
           assert.ifError err
           files2 = branch2.files()
           dup_files = [
-            { location: "#{b_cp}master.ipa",   name: "master.ipa" },
-            { location: "#{b_cp}master.plist", name: "master.plist" }
+            { location: path.join(b_cp, "master.ipa"),   name: "master.ipa" },
+            { location: path.join(b_cp, "master.plist"), name: "master.plist" }
           ]
 
           pfix = "#{__dirname}/fixtures"
-          fs.copy "#{pfix}/master.ipa", "#{b_cp}master.ipa", (err) =>
-            fs.copy "#{pfix}/master.plist", "#{b_cp}master.plist", (err) =>
+          fs.copy "#{pfix}/master.ipa", "#{b_cp}/master.ipa", (err) =>
+            fs.copy "#{pfix}/master.plist", "#{b_cp}/master.plist", (err) =>
               files2.save dup_files, (err, reply) =>
                 assert.ifError err
                 branch2.all (err, reply) =>
