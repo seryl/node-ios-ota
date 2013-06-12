@@ -1,4 +1,4 @@
-path = require 'path'
+global.path = require 'path'
 
 global.fs = require 'fs.extra'
 global.os = require 'os'

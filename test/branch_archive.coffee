@@ -22,20 +22,20 @@ describe 'BranchArchive', ->
           done()
 
   beforeEach (done) ->
+    b_cp = config.get('repository')
     user = new User({ name: "zoidberg" })
     user.delete_all ->
       user.save (err, username) ->
         app = user.applications().build('brainslugs')
         app.save (err, reply) ->
-          b_cp = os.tmpDir()
           dup_files = [
-            { location: "#{b_cp}master.ipa", name: "master.ipa" },
-            { location: "#{b_cp}master.plist", name: "master.plist" }
+            { location: path.join(b_cp, "master.ipa"), name: "master.ipa" },
+            { location: path.join(b_cp, "master.plist"), name: "master.plist" }
           ]
 
           pfix = "#{__dirname}/fixtures"
-          fs.copy "#{pfix}/master.ipa", "#{b_cp}master.ipa", (err) ->
-            fs.copy "#{pfix}/master.plist", "#{b_cp}master.plist", (err) ->
+          fs.copy "#{pfix}/master.ipa", "#{b_cp}/master.ipa", (err) ->
+            fs.copy "#{pfix}/master.plist", "#{b_cp}/master.plist", (err) ->
               branch = app.branches().build('master')
               branch.save (err, reply) =>
                 done()
@@ -107,13 +107,13 @@ describe 'BranchArchive', ->
           assert.ifError err
           files2 = arch2.files()
           dup_files = [
-            { location: "#{b_cp}master.ipa",   name: "master.ipa" },
-            { location: "#{b_cp}master.plist", name: "master.plist" }
+            { location: path.join(b_cp, "master.ipa"),   name: "master.ipa" },
+            { location: path.join(b_cp, "master.plist"), name: "master.plist" }
           ]
   
           pfix = "#{__dirname}/fixtures"
-          fs.copy "#{pfix}/master.ipa", "#{b_cp}master.ipa", (err) =>
-            fs.copy "#{pfix}/master.plist", "#{b_cp}master.plist", (err) =>
+          fs.copy "#{pfix}/master.ipa", "#{b_cp}/master.ipa", (err) =>
+            fs.copy "#{pfix}/master.plist", "#{b_cp}/master.plist", (err) =>
               files2.save dup_files, (err, reply) =>
                 assert.ifError err
                 arch2.all (err, reply) =>
