@@ -13,7 +13,7 @@
     "optimist": "0.5.2",
     "nconf": "0.6.7",
     "express":"3.2.6",
-    "redis": "0.8.x",
+    "redis": "0.8.3",
     "merge-recursive": "0.0.3",
     "plist": "0.4.3",
     "mkdirp": "0.3.5",
