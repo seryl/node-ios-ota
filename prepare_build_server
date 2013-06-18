@@ -1,0 +1,132 @@
+#!/usr/bin/env bash
+
+# Note:
+#
+#   This is intended to only run once, when the mac server is
+#   initially provisioned.
+#
+
+shopt -s extglob
+set -o errtrace
+set -o errexit
+
+log()  { printf "%b\n" "$*" ; return $? ; }
+fail() { log "\nError: $*\n" ; exit 1 ; }
+
+PLATFORM=$(uname)
+
+check_global_npkg_installed()
+{
+  npkg_installed=$(npm ls -g $1 | grep $1 | awk '{print $2}')
+}
+
+install_global_npkg()
+{
+  check_global_npkg_installed $1
+  if [ -z $npkg_installed ]; then
+    log "Downloading $1"
+    npm install -g $1
+  fi
+}
+
+check_if_root()
+{
+  if [[ $USER == "root" ]]; then
+    log "Build tools must be installed with the root user or sudo."
+    exit 0
+  fi
+}
+
+install_brew()
+{
+  BREW_LOCATION=$(which brew) || $(cat /dev/null)
+  if [[ $PLATFORM == 'Darwin' ]] && [ -z $BREW_LOCATION ]; then
+    log 'Downloading Homebrew'
+    echo ''| /usr/bin/ruby <(curl -fsSkL raw.github.com/mxcl/homebrew/go)
+  fi
+  log 'Updating Homebrew'
+  brew update | grep -v 'stty: stdin'
+}
+
+install_git()
+{
+  GIT_LOCATION=$(which git) || $(cat /dev/null)
+  if [ -z $GIT_LOCATION ]; then
+    log 'Downloading Git'
+    
+    if [[ $PLATFORM == 'Darwin' ]]; then
+      brew install git
+    fi
+  fi
+}
+
+install_nodejs()
+{
+  NODE_LOCATION=$(which node) || $(cat /dev/null)
+  if [ -z $NODE_LOCATION ]; then
+    log 'Downloading NodeJS'
+
+    if [[ $PLATFORM == 'Darwin' ]]; then
+      brew install nodejs
+    fi
+  fi
+}
+
+install_coffeescript()
+{
+  install_global_npkg "coffee-script"
+}
+
+install_form()
+{
+  install_global_npkg "form-data"
+}
+
+install_request()
+{
+  install_global_npkg "request"
+}
+
+install_q()
+{
+  install_global_npkg "q"
+}
+
+install_optimist()
+{
+  install_global_npkg "optimist"
+}
+
+install_nconf()
+{
+  install_global_npkg "nconf"
+}
+
+install_plist()
+{
+  install_global_npkg "plist"
+}
+
+show_complete()
+{
+  log "Build tools installation completed."
+}
+
+prepare_machine()
+{
+  check_if_root
+  install_brew
+  install_git
+  install_nodejs
+  install_coffeescript
+  install_formdata
+  install_request
+  install_q
+  install_optimist
+  install_nconf
+  install_plist
+  show_complete
+}
+
+prepare_machine
+

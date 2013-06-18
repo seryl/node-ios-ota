@@ -1,0 +1,368 @@
+#!/usr/bin/env coffee
+
+q = require 'q'
+plist = require 'plist'
+rest = require 'request'
+http = require 'http'
+optimist = require 'optimist'
+nconf = require 'nconf'
+FormData = require 'form-data'
+
+{spawn} = require 'child_process'
+path = require 'path'
+fs = require 'fs'
+
+###*
+ * Promise-based wrapper around exec.
+ * @param {String} (command) The command to run
+ * @param {Array} (options) The options to pass into the command
+ * @return The promise for the process
+###
+exec = (command, options = []) ->
+  deferred = q.defer()
+  ps = spawn(command, options)
+  ps.stdout.on 'data', (data) =>
+    console.log data.toString()
+
+  ps.stderr.on 'data', (data) =>
+    console.log data.toString()
+
+  ps.on 'exit', (code) =>
+    if code == 0
+      deferred.resolve(null)
+    else
+      console.log "Process `#{command}` exited with code: #{code.toString()}"
+      deferred.reject(code.toString())
+  deferred.promise
+
+###*
+ * Returns the string with the first letter capitalized.
+ * @param {String} (string) The string to capitalize
+ * @return {String} The newly capitalized string
+###
+capitalize_first_letter = (string) ->
+  string.charAt(0).toUpperCase() + string.slice(1)
+
+###############
+# Git utilities
+###############
+
+###*
+ * Resets the current git branch.
+ * @return The promise for the process
+###
+git_reset = ->
+  console.log 'resetting git...'
+  exec "git",  ["reset", "--hard"]
+
+###*
+ * Cleans the current git branch of extraneous files.
+ * @return The promise for the process
+###
+git_clean = ->
+  console.log 'cleaning git...'
+  exec "git", ["clean", "-fdx"]
+
+###*
+ * Rests the current git branch.
+ * @param {String} (branch) The branch to configure
+ * @return The promise for the process
+###
+git_checkout = (branch) ->
+  console.log 'checking out git...'
+  exec "git", ["checkout", branch]
+
+###*
+ * Rests the current git branch.
+ * @param {String} (branch) The branch to configure
+ * @return The promise for the process
+###
+git_pull = (branch) ->
+  console.log 'pulling git...'
+  exec "git", ["pull", "origin", branch]
+
+###*
+ * Runs the cleanup and setup of new branches for the compilation.
+ * @param {String} (branch) The branch to configure
+###
+git_setup_branch = (branch) ->
+  console.log 'Setting up git branch...'
+  git_reset()
+  .then((step1) => git_clean())
+  .then((step2) => git_checkout(branch))
+  .then((step3) =>
+    git_pull(branch)
+  , (err) ->
+    console.log "Error setting up the branch: #{branch}"
+    console.log err
+    process.exit(1))
+
+###############
+# NPM utilities
+###############
+
+link_npm_modules = ->
+  options = ["link"
+    , "form-data"
+    , "request"
+    , "q"
+    , "optimist"
+    , "nconf"
+    , "plist"
+  ]
+  exec "npm", options
+
+#################
+# Xcode utilities
+#################
+
+###* Updates the iOS revision number before building the project.
+ * @param  {String} (branch) The branch name for the plist
+ * @return {Object} The promise for the command
+###
+set_info_revision_number = (branch) ->
+  deferred = q.defer()
+  plist_loc = path.normalize "#{__dirname}/../myapp.plist"
+  proj_plist = read_plist(plist_loc)
+  proj_plist["CFBundleVersion"] = process.env.BUILD_NUMBER
+  proj_plist["SCMBranchName"] = branch
+  fs.writeFile plist_loc, plist.build(proj_plist).toString(), (err) =>
+    if err
+      deferred.reject(err)
+    else
+      deferred.resolve(err)
+  deferred.promise
+
+###*
+ * Compiles the iOS project for the given device.
+ * @param {String} The device to compile for [iphone|ipad]
+ * @return {Object} The native representation of the plist
+###
+compile_project = (device) ->
+  if device == "iphone"
+    device = "iPhone"
+  else if device == "ipad"
+    device = "iPad"
+
+  opts = [
+    "-configuration", "Release (Enterprise Distribution)"
+  , "-target", device
+  ]
+  exec "xcodebuild", opts
+
+###*
+ * Creates the artifact tag for the given branch and device.
+ * @param {String} (repository) The github repository name for the project
+ * @param {String} (name) The leaf [tag|branch] name for the current artifact
+ * @param {String} (device) The device to compile for [iphone|ipad]
+ * @return {String} the artifact tag
+###
+artifact_tag = (repository, name, device) ->
+  [repository, name, device].join('-')
+
+###*
+ * Generate the archive dSYM for the current project.
+ * @param {String} (art_tag) The artifact tag for the current package
+ * @param {String} (app_name) The name of the application
+ * @return {Object} The native representation of the plist
+###
+archive_symbols = (art_tag, app_name) ->
+  buildstr = "build/Release (Enterprise Distribution)-iphoneos"
+  ws = process.env.WORKSPACE
+  opts = ["czf", "#{art_tag}.dSYM.tar.gz"
+  , "-C", "#{ws}/#{buildstr}/", "#{app_name}.app.dSYM"
+  ]
+  exec "tar", opts
+
+###*
+ * Promise-based IPA packaging.
+ * @param {String} (art_tag) The artifact tag for the current package
+ * @param {String} (app_name) The name of the application
+ * @return {Object} The native representation of the plist
+###
+package_ipa = (art_tag, app_name) ->
+  buildstr = "build/Release (Enterprise Distribution)-iphoneos"
+  ws = process.env.WORKSPACE
+
+  opts = ["-sdk", "iphoneos", "PackageApplication"
+  , "-v", "#{buildstr}/#{app_name}.app"
+  , "-o", "#{ws}/#{art_tag}.ipa"
+  ]
+  console.log opts
+  exec "xcrun", opts
+
+###*
+ * Creates a plist to upload to the ios-ota server.
+ * @param {String} (pfile) The plist to reference when creating the build
+ * @param {String} (user) The user to create the plist for
+ * @param {String} (asset_url) The url download location for the 
+ * @param {String} (bundle_id) The device type [iphone|ipad]
+ * @param {String} (dtype) The leaftype [tag|branch]
+ * @param {String} (name) The leaf name [ex: master, 1.0, my_feature_branch]
+ * @return {Object} The native representation of the plist
+###
+create_plist = (pfile, user, asset_url, bundle_id, dtype, name) ->
+  if dtype == "branch"
+    dtype = "branches"
+  else if dtype == "tag"
+    dtype = "tags"
+
+  proj_plist = read_plist(pfile)
+  version = proj_plist["CFBundleShortVersionString"]
+  revision = process.env.BUILD_NUMBER
+
+  pobj = {}; assets = {}; metadata = {}
+  assets.kind = "software-package"
+  assets.url = asset_url
+
+  metadata['bundle-identifier'] = bundle_id
+  metadata['bundle-version'] = revision
+  metadata.kind = "software"
+  metadata.title = "#{capitalize_first_letter(user)} #{version}.#{revision}"
+
+  pobj.items = [ { assets: Array(assets), metadata: metadata } ]
+  return plist.build(pobj)
+
+###*
+ * Reads the current project plist and returns a native object.
+ * @param {String} (pfile) The plist file to read
+ * @return {Object} The native representation of the plist
+###
+read_plist = (pfile) ->
+  return plist.parseFileSync(path.normalize(pfile))
+
+###*
+ * Prepares the packages for 
+###
+prepare_packages = (pfile, repository, branch, device, app_name) ->
+  console.log 'preparing packages...'
+  git_setup_branch(branch)
+  .then( (err) =>
+    console.log 'linking npm modules...'
+    link_npm_modules())
+  .then( (err) =>
+    console.log 'setting rev number...'
+    set_info_revision_number(branch))
+  .then( (err) =>
+    console.log 'compiling project...'
+    compile_project(device))
+  .then( (err) =>
+    console.log 'packaging ipa...'
+    art_tag = artifact_tag(repository, branch, device)
+    package_ipa(art_tag, app_name))
+  .then( (err) =>
+    console.log 'archiving symbols...'
+    art_tag = artifact_tag(repository, branch, device)
+    archive_symbols(art_tag, app_name)
+  , (err) ->
+    console.log "Error packaging ipa: #{err}"
+    console.log err
+    process.exit(1))
+
+###*
+ * Submits the compiled ipa, dSYM, and plist to the ota server.
+ * @param {String} (url) The url of the iOS ota server
+ * @param {String} (user) The user to compile to project for
+ * @param {String} (pfile) The location of the plist file to reference
+ * @param {String} (repository) The name of the git repository
+ * @param {String} (device) The type of device to compile for [ipad|iphone]
+ * @param {String} (dtype) The leaftype to build for [tag|branch]
+ * @param {String} (name) The name of the tag/branch
+###
+submit_to_ota = (url, user, pfile, repository, device, dtype, name) ->
+  if dtype == "branch"
+    dtype = "branches"
+  else if dtype == "tag"
+    dtype = "tags"
+
+  if device == "iphone"
+    device = "iPhone"
+  else if device == "ipad"
+    device = "iPad"
+
+  if device == "iPhone"
+    app_name  = "iPhone"
+    bundle_id = "com.mycompany.dev"
+  else
+    app_name  = "iPad"
+    bundle_id = "com.mycompany.dev"
+
+  pfile = path.normalize("#{__dirname}/#{pfile}")
+  prepare_packages(pfile, repository, name, device, app_name)
+  .then((step1) =>
+    asset_url = "#{url}/#{device.toLowerCase()}/#{dtype}/#{name}/download/#{name}.ipa"
+
+    art_tag = artifact_tag(repository, name, device)
+    ws = process.env.WORKSPACE
+
+    plist_data = create_plist(pfile, user, asset_url, bundle_id, dtype, name)
+    fs.writeFileSync "#{ws}/#{art_tag}.plist", plist_data
+
+    file_list = [
+      "#{ws}/#{art_tag}.ipa",
+      "#{ws}/#{art_tag}.dSYM.tar.gz",
+      "#{ws}/#{art_tag}.plist"
+    ]
+
+    file_mapping = file_list.map (fmapping) ->
+        name: path.basename(fmapping)
+        value: fs.createReadStream(fmapping)
+
+    form = new FormData()
+    form.append('username', "admin")
+    form.append('secret',   "admin")
+    for f in file_mapping
+      form.append(f.name, f.value)
+
+    http_info = url.split('//')[1].split(':')
+    http_host = http_info[0]
+
+    form.getLength (err, flength) =>
+      req = http.request(
+        method: 'post'
+        host: http_host
+        path: "/#{device.toLowerCase()}/#{dtype}/#{name}"
+        headers: form.getHeaders({'Content-Length': flength}))
+
+      form.pipe(req)
+
+      req.on 'response', (res) =>
+        res.on 'data', (data) =>
+          console.log data.toString()
+
+      req.on 'error', (error) =>
+        console.log error
+  ).done()
+
+f = path.basename(__filename)
+usage_str = "#{f} [url] [user] [repository] [device] [branch|tag] [name]"
+
+argv = optimist
+.usage("Usage: #{usage_str}")
+
+# help
+.alias('h', 'help')
+.describe('h', 'Shows this message')
+.default('h', false)
+
+# append the argv from the cli
+.argv
+
+# Setup the nconf configuration singleton
+nconf.add('optimist_args', {type: 'literal', store: argv})
+
+if nconf.get('help') and nconf.get('help').toString() is "true"
+  optimist.showHelp()
+  process.exit(0)
+
+# Setup cli parameters
+params = argv._
+if params.length != 6
+  optimist.showHelp()
+  process.exit(0)
+
+[url, user, repository, device, dtype, leaf] = params
+
+submit_to_ota(
+  url, user, "../myapp.plist",
+  repository, device, dtype, leaf)
