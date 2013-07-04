@@ -1,4 +1,4 @@
-ios-ota [![build status](https://secure.travis-ci.org/seryl/node-ios-ota.png)](https://travis-ci.org/seryl/node-ios-ota)
+ios-ota [![build status](https://secure.travis-ci.org/seryl/node-ios-ota.png?branch=master)](https://travis-ci.org/seryl/node-ios-ota)
 =======
 
 A node-based iOS over-the-air service with a full REST interface.
